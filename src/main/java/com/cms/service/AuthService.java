@@ -6,6 +6,7 @@ import com.cms.model.User;
 import com.cms.repository.UserRepository;
 import com.cms.security.JwtTokenProvider;
 import com.cms.security.UserPrincipal;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,18 +19,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @Service
+@AllArgsConstructor
 public class AuthService {
-    
-    @Autowired
     private AuthenticationManager authenticationManager;
-    
-    @Autowired
     private UserRepository userRepository;
-    
-    @Autowired
     private PasswordEncoder passwordEncoder;
-    
-    @Autowired
     private JwtTokenProvider tokenProvider;
     
     public JwtResponse authenticateUser(LoginRequest loginRequest) {

@@ -1,6 +1,8 @@
 package com.cms.security;
 
 import com.cms.model.User;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,21 +10,24 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 
+@AllArgsConstructor
 public class UserPrincipal implements UserDetails {
-    private String id;
-    private String email;
-    private String name;
-    private String password;
-    private Collection<? extends GrantedAuthority> authorities;
-    
-    public UserPrincipal(String id, String email, String name, String password, 
-                        Collection<? extends GrantedAuthority> authorities) {
-        this.id = id;
-        this.email = email;
-        this.name = name;
-        this.password = password;
-        this.authorities = authorities;
-    }
+    @Getter
+    private final String id;
+    private final String email;
+    @Getter
+    private final String name;
+    private final String password;
+    private final Collection<? extends GrantedAuthority> authorities;
+
+//    public UserPrincipal(String id, String email, String name, String password,
+//                        Collection<? extends GrantedAuthority> authorities) {
+//        this.id = id;
+//        this.email = email;
+//        this.name = name;
+//        this.password = password;
+//        this.authorities = authorities;
+//    }
     
     public static UserPrincipal create(User user) {
         Collection<GrantedAuthority> authorities = Collections.singletonList(
@@ -37,15 +42,7 @@ public class UserPrincipal implements UserDetails {
             authorities
         );
     }
-    
-    public String getId() {
-        return id;
-    }
-    
-    public String getName() {
-        return name;
-    }
-    
+
     @Override
     public String getUsername() {
         return email;

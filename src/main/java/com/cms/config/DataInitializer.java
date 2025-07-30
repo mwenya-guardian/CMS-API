@@ -1,14 +1,15 @@
 package com.cms.config;
 
 import com.cms.service.AuthService;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class DataInitializer implements CommandLineRunner {
-    
-    @Autowired
     private AuthService authService;
     
     @Override

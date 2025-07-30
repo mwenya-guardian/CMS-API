@@ -10,6 +10,7 @@ import com.cms.service.EventService;
 import com.cms.service.ExportService;
 import com.cms.service.FileService;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,18 +23,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/events")
+@AllArgsConstructor
 public class EventController {
-    
-    @Autowired
     private EventService eventService;
-    
-    @Autowired
     private FileService fileService;
-    
-    @Autowired
     private ExportService exportService;
-    
-    @GetMapping
     public ResponseEntity<ApiResponse<List<Event>>> getAllEvents(
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month,

@@ -10,6 +10,7 @@ import com.cms.service.ExportService;
 import com.cms.service.FileService;
 import com.cms.service.PublicationService;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,15 +23,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/publications")
+@AllArgsConstructor
 public class PublicationController {
-    
-    @Autowired
     private PublicationService publicationService;
-    
-    @Autowired
     private FileService fileService;
-    
-    @Autowired
     private ExportService exportService;
     
     @GetMapping

@@ -4,7 +4,8 @@ import com.cms.dto.request.QuoteRequest;
 import com.cms.dto.response.PageResponse;
 import com.cms.model.Quote;
 import com.cms.repository.QuoteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -13,17 +14,18 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
+@NoArgsConstructor
 public class QuoteService {
     
-    @Autowired
+
     private QuoteRepository quoteRepository;
-    
-    @Autowired
     private MongoTemplate mongoTemplate;
     
     public List<Quote> getAllQuotes(Integer year, Integer month, Integer day, 

@@ -3,6 +3,8 @@ package com.cms.service;
 import com.cms.model.User;
 import com.cms.repository.UserRepository;
 import com.cms.security.UserPrincipal;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -10,10 +12,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
-    
-    @Autowired
     private UserRepository userRepository;
     
     @Override

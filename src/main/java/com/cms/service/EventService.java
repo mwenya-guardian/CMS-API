@@ -4,6 +4,8 @@ import com.cms.dto.request.EventRequest;
 import com.cms.dto.response.PageResponse;
 import com.cms.model.Event;
 import com.cms.repository.EventRepository;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,12 +20,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@NoArgsConstructor
+@AllArgsConstructor
 public class EventService {
-    
-    @Autowired
     private EventRepository eventRepository;
-    
-    @Autowired
     private MongoTemplate mongoTemplate;
     
     public List<Event> getAllEvents(Integer year, Integer month, Integer day, 

@@ -6,15 +6,15 @@ import com.cms.dto.response.JwtResponse;
 import com.cms.model.User;
 import com.cms.service.AuthService;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
+@AllArgsConstructor
 public class AuthController {
-    
-    @Autowired
     private AuthService authService;
     
     @PostMapping("/login")

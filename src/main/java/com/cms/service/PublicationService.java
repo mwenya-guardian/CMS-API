@@ -4,6 +4,8 @@ import com.cms.dto.request.PublicationRequest;
 import com.cms.dto.response.PageResponse;
 import com.cms.model.Publication;
 import com.cms.repository.PublicationRepository;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,12 +21,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@NoArgsConstructor
+@AllArgsConstructor
 public class PublicationService {
-    
-    @Autowired
+
     private PublicationRepository publicationRepository;
-    
-    @Autowired
     private MongoTemplate mongoTemplate;
     
     public List<Publication> getAllPublications(Integer year, Integer month, Integer day, 
