@@ -18,9 +18,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+
+@Component
 @NoArgsConstructor
 @AllArgsConstructor
-@Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private JwtTokenProvider tokenProvider;
