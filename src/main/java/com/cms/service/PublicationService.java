@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@NoArgsConstructor
+//@NoArgsConstructor
 @AllArgsConstructor
 public class PublicationService {
 
