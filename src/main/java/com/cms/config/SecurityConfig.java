@@ -3,7 +3,7 @@ package com.cms.config;
 import com.cms.security.JwtAuthenticationFilter;
 import com.cms.security.JwtAuthenticationEntryPoint;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,6 +18,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -26,6 +29,18 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    @Value("${cors.allowed-origins}")
+    private String[] allowedOrigins;
+    
+    @Value("${cors.allowed-methods}")
+    private String[] allowedMethods;
+    
+    @Value("${cors.allowed-headers}")
+    private String allowedHeaders;
+    
+    @Value("${cors.allow-credentials}")
+    private boolean allowCredentials;
     
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -40,24 +55,47 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .exceptionHandling(exceptionHandling->exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint))
             .sessionManagement(sessionManagement->sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/auth/login").permitAll()
-                .requestMatchers("/auth/register").permitAll()
-                .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/events/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/publications/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/quotes/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/church-details/**").permitAll()
+                .requestMatchers("/api/auth/login").permitAll()
+                .requestMatchers("/api/auth/register").permitAll()
+                .requestMatchers("/api/actuator/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/publications/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/quotes/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/church-details/**").permitAll()
                 // Newsletter subscription
-                .requestMatchers(HttpMethod.POST, "/newsletter/subscribe").permitAll()
-                .requestMatchers(HttpMethod.GET, "/newsletter/verify").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/newsletter/subscribe").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/newsletter/verify").permitAll()
                 .anyRequest().authenticated()
             );
         
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
+    }
+    
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        // Use the values from application.yml
+        for (String origin : allowedOrigins) {
+            configuration.addAllowedOrigin(origin);
+        }
+        
+        for (String method : allowedMethods) {
+            configuration.addAllowedMethod(method);
+        }
+        
+        configuration.addAllowedHeader(allowedHeaders);
+        configuration.setAllowCredentials(allowCredentials);
+        configuration.setMaxAge(3600L);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
