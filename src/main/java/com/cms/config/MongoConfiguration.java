@@ -9,8 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Optional;
 
 @Configuration
-//@EnableMongoAuditing
-public class MongoConfig {
+public class MongoConfiguration {
     @Bean
     public AuditorAware<String> auditorProvider() {
         return () -> Optional.ofNullable(
