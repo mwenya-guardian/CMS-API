@@ -33,6 +33,8 @@ public class Bulletin {
 
     @Field("content")
     private String content;
+    @Field("cover")
+    private Cover cover;
 
     @Field("status")
     private PublicationStatus status;
@@ -56,11 +58,11 @@ public class Bulletin {
     @Field("announcements")
     private Set<Announcement> announcements = new HashSet<>();
 
-    @DBRef(lazy = true)
+//    @DBRef(lazy = true)
     @Field("on_duty_list")
     private Set<OnDuty> onDutyList = new HashSet<>();
 
-    private enum PublicationStatus{
+    public enum PublicationStatus{
         DRAFT, PUBLISHED, SCHEDULED
     }
 

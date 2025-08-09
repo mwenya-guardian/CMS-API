@@ -17,5 +17,5 @@ public class Cover {
     @NotBlank(message = "Greeting message required")
     private String welcomeMessage;
     private String footerMessage;
-    private LocalDate datePublished;
+//    private LocalDate datePublished;
 }

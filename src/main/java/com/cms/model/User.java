@@ -50,6 +50,10 @@ public class User {
     public enum UserRole {
         ADMIN, EDITOR, VIEWER
     }
+
+    public User(String id) {
+        this.id = id;
+    }
     
     public User(String email, String name, String password, UserRole role) {
         this.email = email;
