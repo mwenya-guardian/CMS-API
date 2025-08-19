@@ -1,0 +1,64 @@
+name: CI-CD to Render
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write        # required if pushing to ghcr
+  id-token: write        # if you use OIDC for any registry auth
+  actions: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.repository }}  # repo-scoped image
+      IMAGE_TAG: ${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+
+      - name: Build with Maven (skip tests to speed up; run tests earlier if you want)
+        run: mvn -B -DskipTests package
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}   # create a personal access token with 'write:packages'
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      # Option A: Trigger Render Deploy using Render Deploy Action
+      - name: Trigger Render Deploy (Action)
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+          wait-for-success: 'true'
+
+      # Option B (alternative): Trigger deploy via Deploy Hook (if you created a deploy hook URL)
+      # - name: Trigger Render Deploy (Hook)
+      #   run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" -H 'Content-Type: application/json' -d '{"source":"github-actions","image":"'"${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" }'
