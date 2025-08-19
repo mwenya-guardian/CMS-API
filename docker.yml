@@ -1,0 +1,21 @@
+# stage 1: build
+FROM maven:3.9.4-eclipse-temurin-17 AS build
+WORKDIR /workspace
+# copy just the maven files first to leverage caching
+COPY pom.xml .
+COPY settings.xml .   # optional if you use settings.xml
+RUN mvn -B -DskipTests dependency:go-offline
+
+# copy sources and build
+COPY src ./src
+RUN mvn -B -DskipTests package
+
+# stage 2: final image (slim)
+FROM eclipse-temurin:17-jre-jammy
+ARG JAR_FILE=/workspace/target/*.jar
+# create non-root user
+RUN useradd -m springuser
+USER springuser
+COPY --from=build ${JAR_FILE} /app/app.jar
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","/app/app.jar"]
