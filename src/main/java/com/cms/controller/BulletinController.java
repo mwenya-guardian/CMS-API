@@ -6,11 +6,15 @@ import com.cms.dto.response.PageResponse;
 import com.cms.model.Bulletin;
 import com.cms.model.Bulletin.PublicationStatus;
 import com.cms.service.BulletinService;
+import com.cms.service.ExportService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,7 +24,7 @@ import java.util.List;
 public class BulletinController {
 
     private final BulletinService bulletinService;
-
+    private final ExportService exportService;
     @GetMapping
     public ResponseEntity<ApiResponse<List<Bulletin>>> getAllBulletins(
             @RequestParam(required = false) LocalDate date,
@@ -98,5 +102,39 @@ public class BulletinController {
     ) {
         List<Bulletin> items = bulletinService.getBulletinsByIds(ids);
         return ResponseEntity.ok(ApiResponse.success(items));
+    }
+    
+    @GetMapping("/{id}/export/pdf")
+    public ResponseEntity<byte[]> exportBulletinToPdf(@PathVariable String id) throws IOException {
+        Bulletin bulletin = bulletinService.getBulletinById(id)
+                .orElseThrow(() -> new RuntimeException("Bulletin not found"));
+        
+        byte[] pdfBytes = exportService.exportBulletinToPdf(bulletin);
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "bulletin-" + id + ".pdf");
+        headers.setCacheControl("no-cache");
+        
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
+    }
+    
+    @GetMapping("/{id}/export/word")
+    public ResponseEntity<byte[]> exportBulletinToWord(@PathVariable String id) throws IOException {
+        Bulletin bulletin = bulletinService.getBulletinById(id)
+                .orElseThrow(() -> new RuntimeException("Bulletin not found"));
+        
+        byte[] wordBytes = exportService.exportBulletinToWord(bulletin);
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+        headers.setContentDispositionFormData("attachment", "bulletin-" + id + ".docx");
+        headers.setCacheControl("no-cache");
+        
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(wordBytes);
     }
 }

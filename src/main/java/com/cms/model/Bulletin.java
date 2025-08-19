@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,7 +20,7 @@ import java.util.Set;
 @AllArgsConstructor
 @SuperBuilder
 @Document(collection = "bulletins")
-public class Bulletin {
+public class Bulletin extends BaseDocument{
 
     @Id
     private String id;
@@ -27,23 +28,21 @@ public class Bulletin {
     @Field("title")
     private String title;
 
+    @Field("cover")
+    private Cover cover;
+
     // you can keep LocalDate if you have a custom converter; else use Instant or Date
     @Field("bulletin_date")
     private LocalDate bulletinDate;
 
     @Field("content")
     private String content;
-    @Field("cover")
-    private Cover cover;
 
     @Field("status")
     private PublicationStatus status;
 
-    @Field("published_at")
-    private Instant publishedAt;
-
     @Field("scheduled_publish_at")
-    private Instant scheduledPublishAt;
+    private Date scheduledPublishAt;
 
     // reference to a user document
     @DBRef(lazy = true)

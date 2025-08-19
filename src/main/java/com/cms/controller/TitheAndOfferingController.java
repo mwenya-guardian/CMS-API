@@ -1,8 +1,8 @@
 package com.cms.controller;
 
 import com.cms.dto.response.ApiResponse;
-import com.cms.model.PastoralTeam;
-import com.cms.service.PastoralTeamService;
+import com.cms.model.TitheAndOffering;
+import com.cms.service.TitheAndOfferingService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,54 +12,47 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/pastoral-team")
+@RequestMapping("giving")
 @AllArgsConstructor
-public class PastoralTeamController {
-
-    private final PastoralTeamService service;
+public class TitheAndOfferingController {
+    private final TitheAndOfferingService service;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PastoralTeam>>> getAll() {
-        List<PastoralTeam> list = service.getAll();
-        return ResponseEntity.ok(ApiResponse.success(list));
-    }
-
-    @GetMapping("/active")
-    public ResponseEntity<ApiResponse<List<PastoralTeam>>> getAllActive() {
-        List<PastoralTeam> list = service.getAllActive();
+    public ResponseEntity<ApiResponse<List<TitheAndOffering>>> getAll() {
+        List<TitheAndOffering> list = service.getAll();
         return ResponseEntity.ok(ApiResponse.success(list));
     }
 
     @GetMapping("/paginated")
-    public ResponseEntity<ApiResponse<Page<PastoralTeam>>> getActivePaginated(
+    public ResponseEntity<ApiResponse<Page<TitheAndOffering>>> getPaginated(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Page<PastoralTeam> pg = service.getActivePaginated(page, size);
+        Page<TitheAndOffering> pg = service.getPaginated(page, size);
         return ResponseEntity.ok(ApiResponse.success(pg));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PastoralTeam>> getById(@PathVariable String id) {
-        PastoralTeam member = service.getById(id)
+    public ResponseEntity<ApiResponse<TitheAndOffering>> getById(@PathVariable String id) {
+        TitheAndOffering member = service.getTitheAndOfferingById(id)
                 .orElseThrow(() -> new RuntimeException("pastoral team member not found"));
         return ResponseEntity.ok(ApiResponse.success(member));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<PastoralTeam>> create(
-            @Valid @RequestBody PastoralTeam request
+    public ResponseEntity<ApiResponse<TitheAndOffering>> create(
+            @Valid @RequestBody TitheAndOffering request
     ) {
-        PastoralTeam created = service.create(request);
+        TitheAndOffering created = service.create(request);
         return ResponseEntity.ok(ApiResponse.success(created));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<PastoralTeam>> update(
+    public ResponseEntity<ApiResponse<TitheAndOffering>> update(
             @PathVariable String id,
-            @Valid @RequestBody PastoralTeam request
+            @Valid @RequestBody TitheAndOffering request
     ) {
-        PastoralTeam updated = service.update(id, request);
+        TitheAndOffering updated = service.update(id, request);
         return ResponseEntity.ok(ApiResponse.success(updated));
     }
 

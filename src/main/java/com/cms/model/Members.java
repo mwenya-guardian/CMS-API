@@ -7,13 +7,13 @@ import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "pastoral_team")
+@Document(collection = "members")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class PastoralTeam extends BaseDocument {
+public class Members extends BaseDocument {
 
     @Id
     private String id;
@@ -24,13 +24,14 @@ public class PastoralTeam extends BaseDocument {
 
     @NotBlank
     @Size(max = 200)
-    private String fullName;
+    private String firstname;
+
+    @NotBlank
+    @Size(max = 200)
+    private String lastname;
 
     @Size(max = 100)
     private String positionType;
-
-    @Size(max = 1000)
-    private String biography;
 
     @Size(max = 500)
     private String photoUrl;
@@ -39,9 +40,6 @@ public class PastoralTeam extends BaseDocument {
     private String email;
 
     @Size(max = 20)
+    @NotBlank
     private String phone;
-
-    private Integer displayOrder;
-
-    private Boolean active = true;
 }

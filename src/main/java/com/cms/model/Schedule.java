@@ -18,18 +18,12 @@ import java.util.List;
 @Setter
 @Getter
 @NoArgsConstructor
-@Document(collection = "Schedules")
+// @Document(collection = "Schedules")
 public class Schedule {
     @NotBlank
     private String title;
-    // private HashMap<String, List<String>> roleAssignment;
-    @Field
-    private List<OnDuty> roleAssignment;
-    // private HashMap<String, List<String>> activityAssignment;
-    @Field
-    private List<OnDuty> activityAssignment;
-    @Field
-    private HashMap<String, List<String>> activityDetails;
+    @NotNull
+    private HashMap<String, String> scheduledActivities;
     @NotNull
     private LocalTime startTime;
     @NotNull

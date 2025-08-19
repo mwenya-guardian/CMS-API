@@ -61,6 +61,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/church-details/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/bulletins/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/members/positionType/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/members/position/**").permitAll()
                         // Newsletter subscription
                         .requestMatchers(HttpMethod.POST, "/newsletter/subscribe").permitAll()
                         .requestMatchers(HttpMethod.GET, "/newsletter/verify").permitAll()

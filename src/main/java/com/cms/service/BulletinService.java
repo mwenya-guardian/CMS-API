@@ -172,28 +172,12 @@ public class BulletinService {
         bulletin.setBulletinDate(req.getBulletinDate());
         bulletin.setContent(req.getContent());
         bulletin.setStatus(req.getStatus());
-        bulletin.setPublishedAt(req.getPublishedAt());
         bulletin.setScheduledPublishAt(req.getScheduledPublishAt());
         bulletin.setAnnouncements(req.getAnnouncements());
         bulletin.setSchedules(req.getSchedules());
-        bulletin.setOnDutyList(req.getOnDuty());
+        bulletin.setOnDutyList(req.getOnDutyList());
         bulletin.setCover(req.getCover());
 
         bulletin.setAuthor(new User(authService.getCurrentUser().getId()));
-        // if(bulletin.getAnnouncements() != null && req.getAnnouncements() != null){
-        //     bulletin.getAnnouncements().addAll(req.getAnnouncements());
-        // }else {
-        //     bulletin.setAnnouncements(req.getAnnouncements());
-        // }
-        // if(bulletin.getOnDutyList() != null && req.getOnDuty() != null){
-        //     bulletin.getOnDutyList().addAll(req.getOnDuty());
-        // }else {
-        //     bulletin.setSchedules(req.getSchedules());
-        // }
-        // if(bulletin.getSchedules() != null && req.getSchedules() != null){
-        //     bulletin.getSchedules().addAll(req.getSchedules());
-        // }else {
-        //     bulletin.setSchedules(req.getSchedules());
-        // }
     }
 }
