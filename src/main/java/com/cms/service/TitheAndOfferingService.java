@@ -44,6 +44,7 @@ public class TitheAndOfferingService {
                 .orElseThrow(() -> new RuntimeException("TitheAndOffering not found"));
         // copy updatable fields
         TitheAndOffering newTitheAndOffering = new TitheAndOffering();
+        newTitheAndOffering.setId(existing.getId());
         newTitheAndOffering.setTitle(incoming.getTitle().toLowerCase());
         List<String> lowerCaseMethods = incoming.getMethod().stream().map(String::toLowerCase).toList();
         newTitheAndOffering.setMethod(lowerCaseMethods);

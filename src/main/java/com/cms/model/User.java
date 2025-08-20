@@ -13,52 +13,55 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Setter
 @Getter
 @NoArgsConstructor
 @Document(collection = "users")
-public class User {
+public class User extends BaseDocument{
     // Getters and Setters
     @Id
     private String id;
     
-    @NotBlank(message = "Email is required")
+
     @Email(message = "Email should be valid")
     @Indexed(unique = true)
     private String email;
     
-    @NotBlank(message = "Name is required")
+
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
-    private String name;
+    private String firstname;
+
+
+    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    private String lastname;
     
-    @NotBlank(message = "Password is required")
+
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
     
     private UserRole role = UserRole.VIEWER;
-    private String avatar;
+//    private String avatar;
+
+    private LocalDate dob;
     private LocalDateTime lastLogin;
     
-    @CreatedDate
-    private LocalDateTime createdAt;
-    
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
-    
     public enum UserRole {
-        ADMIN, EDITOR, VIEWER
+        ADMIN, EDITOR, USER, VIEWER
     }
 
     public User(String id) {
         this.id = id;
     }
     
-    public User(String email, String name, String password, UserRole role) {
+    public User(String email, String firstname, String lastname, String password, LocalDate dob, UserRole role) {
         this.email = email;
-        this.name = name;
+        this.firstname = firstname;
+        this.lastname = lastname;
         this.password = password;
+        this.dob = dob;
         this.role = role;
     }
 

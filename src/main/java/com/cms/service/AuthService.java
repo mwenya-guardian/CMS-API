@@ -7,7 +7,6 @@ import com.cms.repository.UserRepository;
 import com.cms.security.JwtTokenProvider;
 import com.cms.security.UserPrincipal;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -15,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
@@ -66,7 +66,9 @@ public class AuthService {
         if (!userRepository.existsByEmail("admin@cms.com")) {
             User admin = new User();
             admin.setEmail("admin@cms.com");
-            admin.setName("Admin");
+            admin.setLastname("Strator");
+            admin.setFirstname("Admin");
+            admin.setDob(LocalDate.of(1999, 1, 1));
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setRole(User.UserRole.ADMIN);
             userRepository.save(admin);

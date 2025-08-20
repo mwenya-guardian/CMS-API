@@ -16,19 +16,12 @@ public class UserPrincipal implements UserDetails {
     private final String id;
     private final String email;
     @Getter
-    private final String name;
+    private final String firstname;
+    @Getter
+    private final String lastname;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
 
-//    public UserPrincipal(String id, String email, String name, String password,
-//                        Collection<? extends GrantedAuthority> authorities) {
-//        this.id = id;
-//        this.email = email;
-//        this.name = name;
-//        this.password = password;
-//        this.authorities = authorities;
-//    }
-    
     public static UserPrincipal create(User user) {
         Collection<GrantedAuthority> authorities = Collections.singletonList(
             new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
@@ -37,7 +30,8 @@ public class UserPrincipal implements UserDetails {
         return new UserPrincipal(
             user.getId(),
             user.getEmail(),
-            user.getName(),
+            user.getFirstname(),
+            user.getLastname(),
             user.getPassword(),
             authorities
         );
