@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -22,13 +23,13 @@ public class NewsletterSubscriber extends BaseDocument {
     private String id;
 
     @NotBlank
-    @Email
-    @Size(max = 100)
+    @Indexed(unique = true)
     private String email;
 
+    @NotNull
     private Boolean active = true;
 
     private String verificationToken;
-
+    @NotNull
     private Boolean verified = false;
 }

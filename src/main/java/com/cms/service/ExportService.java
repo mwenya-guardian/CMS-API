@@ -276,6 +276,13 @@ public class ExportService {
                 document.add(new Paragraph(schedule.getTitle() + " - " + schedule.getStartTime() + " to " + schedule.getEndTime())
                         .setFontSize(12)
                         .setMarginBottom(5));
+                if (schedule.getScheduledActivities() != null) {
+                    schedule.getScheduledActivities().forEach((key, value)->{
+                        document.add(new Paragraph(key + "\t" + value)
+                                .setFontSize(12)
+                                .setMarginBottom(2));
+                    });
+                }
             }
         }
         

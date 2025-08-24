@@ -64,7 +64,7 @@ public class FileService {
         }
         
         if (file.getSize() > maxFileSize) {
-            throw new RuntimeException("File size exceeds maximum limit of 5MB");
+            throw new RuntimeException("File size exceeds maximum limit of 10MB");
         }
         
         List<String> allowedTypes = Arrays.asList(allowedTypesStr.split(","));

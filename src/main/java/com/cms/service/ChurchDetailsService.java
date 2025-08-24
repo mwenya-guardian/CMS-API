@@ -33,7 +33,10 @@ public class ChurchDetailsService {
      * create a new church details record
      */
     public ChurchDetails create(ChurchDetails details) {
-        return repo.save(details);
+        if (getAll().isEmpty()) {
+            return repo.save(details);
+        }
+        throw new RuntimeException("ChurchDetails already exists");
     }
 
     /**
@@ -45,9 +48,6 @@ public class ChurchDetailsService {
         // copy fields that can be changed
         existing.setName(incoming.getName());
         existing.setAddress(incoming.getAddress());
-        existing.setDocumentName(incoming.getDocumentName());
-        existing.setGreeting(incoming.getGreeting());
-        existing.setMessage(incoming.getMessage());
         existing.setPoBox(incoming.getPoBox());
         existing.setCity(incoming.getCity());
         existing.setProvince(incoming.getProvince());

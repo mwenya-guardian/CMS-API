@@ -9,6 +9,7 @@ import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import java.util.List;
 
 @Getter
 @Setter
@@ -29,18 +30,6 @@ public class ChurchDetails extends BaseDocument {
     @Size(max = 500)
     @Field("address")
     private String address;
-
-    @Size(max = 100)
-    @Field("document_name")
-    private String documentName;
-
-    @Size(max = 200)
-    @Field("greeting")
-    private String greeting;
-
-    @Size(max = 500)
-    @Field("message")
-    private String message;
 
     @Size(max = 100)
     @Field("po_box")
@@ -64,7 +53,7 @@ public class ChurchDetails extends BaseDocument {
 
     @Size(max = 20)
     @Field("cell")
-    private String cell;
+    private List<String> cell;
 
     @Size(max = 100)
     @Field("email")

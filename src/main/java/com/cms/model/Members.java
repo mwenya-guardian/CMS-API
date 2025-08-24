@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "members")
@@ -37,9 +38,11 @@ public class Members extends BaseDocument {
     private String photoUrl;
 
     @Size(max = 100)
+    @Indexed(unique = true)
     private String email;
 
     @Size(max = 20)
     @NotBlank
+    @Indexed(unique = true)
     private String phone;
 }

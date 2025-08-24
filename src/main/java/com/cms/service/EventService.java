@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-//@NoArgsConstructor
+//@NoArgsConstructor not to be added
 @AllArgsConstructor
 public class EventService {
     private EventRepository eventRepository;
