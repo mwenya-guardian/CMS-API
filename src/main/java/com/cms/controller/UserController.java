@@ -6,6 +6,7 @@ import com.cms.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import com.cms.dto.response.ApiResponse;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +21,14 @@ public class UserController {
         this.userService = userService;
     }
 
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<User>>  createUserPublic(@Valid @RequestBody UserRequest request) {
+        User createdUser = userService.createPublic(request);
+        return ResponseEntity.ok(ApiResponse.success(createdUser));
+    }
     // Create User
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<User>>  createUser(@Valid @RequestBody UserRequest request) {
         User createdUser = userService.create(request);
         return ResponseEntity.ok(ApiResponse.success(createdUser));
@@ -41,6 +48,7 @@ public class UserController {
 
     // Update user
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<User>> updateUser(
             @PathVariable String id,
             @Valid @RequestBody UserRequest request
@@ -51,6 +59,7 @@ public class UserController {
 
     // Delete user
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();

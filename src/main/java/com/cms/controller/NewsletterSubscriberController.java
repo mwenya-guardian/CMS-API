@@ -3,6 +3,7 @@ package com.cms.controller;
 import com.cms.dto.request.NewsletterSubscriberRequest;
 import com.cms.dto.response.ApiResponse;
 import com.cms.dto.response.NewsletterSubscriberResponse;
+import com.cms.dto.response.PageResponse;
 import com.cms.model.NewsletterSubscriber;
 import com.cms.service.NewsletterSubscriberService;
 import jakarta.mail.MessagingException;
@@ -11,8 +12,10 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -24,23 +27,19 @@ public class NewsletterSubscriberController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<NewsletterSubscriberResponse>>> getAll() {
-        List<NewsletterSubscriberResponse> list = service.getAll();
+        List<NewsletterSubscriberResponse> list = service.findAll();
         return ResponseEntity.ok(ApiResponse.success(list));
     }
 
     @GetMapping("/paginated")
-    public ResponseEntity<ApiResponse<Page<NewsletterSubscriberResponse>>> getPaginated(
+    public ResponseEntity<ApiResponse<PageResponse<NewsletterSubscriberResponse>>> getPaginated(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Page<NewsletterSubscriberResponse> pg = service.getPaginated(page, size);
+        PageResponse<NewsletterSubscriberResponse> pg = service.findPaginated(page, size);
         return ResponseEntity.ok(ApiResponse.success(pg));
     }
 
-    /**
-     * Return active subscribers (sorted). Caller may pass sort fields like "?sort=createdAt,asc"
-     * We expose a simple sorted endpoint that returns all active subscribers sorted by createdAt desc by default.
-     */
     @GetMapping("/active")
     public ResponseEntity<ApiResponse<List<NewsletterSubscriberResponse>>> getActive(
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -48,7 +47,7 @@ public class NewsletterSubscriberController {
     ) {
         Sort.Direction dir = "asc".equalsIgnoreCase(direction) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort sort = Sort.by(dir, sortBy);
-        List<NewsletterSubscriberResponse> list = service.getActiveSorted(sort);
+        List<NewsletterSubscriberResponse> list = service.findActiveSorted(sort);
         return ResponseEntity.ok(ApiResponse.success(list));
     }
 
@@ -66,35 +65,15 @@ public class NewsletterSubscriberController {
         return ResponseEntity.ok(ApiResponse.success(subscriber));
     }
 
-    /**
-     * Create a subscriber (admin-style create)
-     */
-//    @PostMapping
-//    public ResponseEntity<ApiResponse<NewsletterSubscriber>> create(
-//            @Valid @RequestBody NewsletterSubscriberRequest request
-//    ) {
-//        NewsletterSubscriber toCreate = new NewsletterSubscriber();
-//        toCreate.setEmail(request.getEmail());
-//        NewsletterSubscriber created = service.create(toCreate);
-//        return ResponseEntity.ok(ApiResponse.success(created));
-//    }
-
-    /**
-     * Lightweight subscribe endpoint (public)
-     */
     @PostMapping("/subscribe")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<NewsletterSubscriberResponse>> subscribe(
             @Valid @RequestBody NewsletterSubscriberRequest request
-    ) throws MessagingException {
+    ) throws MessagingException, IOException {
         NewsletterSubscriberResponse s = service.subscribe(request.getEmail());
         // optionally: send verification email with s.getVerificationToken()
         return ResponseEntity.ok(ApiResponse.success(s));
     }
-
-    /**
-     * Verify token (link from email)
-     * Example: GET /newsletter-subscribers/verify?token=abc123
-     */
     @GetMapping("/verify")
     public ResponseEntity<ApiResponse<Boolean>> verify(@RequestParam String token, @RequestParam String email) {
         boolean ok = service.verifyToken(email, token);
@@ -102,6 +81,7 @@ public class NewsletterSubscriberController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<NewsletterSubscriberResponse>> update(
             @PathVariable String id,
             @Valid @RequestBody NewsletterSubscriber request
@@ -111,6 +91,7 @@ public class NewsletterSubscriberController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

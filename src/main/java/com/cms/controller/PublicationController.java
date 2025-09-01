@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -73,12 +74,14 @@ public class PublicationController {
     }
     
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<Publication>> createPublication(@Valid @RequestBody PublicationRequest request) {
         Publication publication = publicationService.createPublication(request);
         return ResponseEntity.ok(ApiResponse.success(publication));
     }
     
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<Publication>> updatePublication(
             @PathVariable String id, @Valid @RequestBody PublicationRequest request) {
         Publication publication = publicationService.updatePublication(id, request);
@@ -86,6 +89,7 @@ public class PublicationController {
     }
     
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<Void> deletePublication(@PathVariable String id) {
         publicationService.deletePublication(id);
         return ResponseEntity.noContent().build();
@@ -138,8 +142,9 @@ public class PublicationController {
     }
     
     @PostMapping("/upload-image")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<FileUploadResponse>> uploadImage(@RequestParam("image") MultipartFile file) throws IOException {
-        FileUploadResponse response = fileService.uploadImage(file);
+        FileUploadResponse response = fileService.uploadImage(file, true);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

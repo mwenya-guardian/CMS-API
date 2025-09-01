@@ -1,10 +1,8 @@
 package com.cms.security;
 
-import com.cms.service.UserDetailsServiceImpl;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,19 +12,19 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
+import com.cms.service.UserDetailsServiceImpl;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 
 @Component
+@AllArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private JwtTokenProvider tokenProvider;
-    private UserDetailsServiceImpl userDetailsService;
-
-    @Autowired
-    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider, UserDetailsServiceImpl userDetailsService) {
-        this.tokenProvider = tokenProvider;
-        this.userDetailsService = userDetailsService;
-    }
+    private final JwtTokenProvider tokenProvider;
+    private final UserDetailsServiceImpl userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -43,6 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                System.out.printf("User %s authenticated successfully", userDetails.getAuthorities().toString());
             }
         } catch (Exception ex) {
             logger.error("Could not set user authentication in security context", ex);

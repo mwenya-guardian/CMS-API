@@ -75,6 +75,29 @@ public class UserService {
         return repository.save(u);
     }
 
+    @Transactional
+    public User createPublic(UserRequest request) {
+        // basic validation (controller layer already validates jakarta constraints)
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new BadRequestException("Email is required");
+        }
+        if (repository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("Email already in use");
+        }
+
+        User u = new User();
+        u.setEmail(request.getEmail().trim().toLowerCase());
+        u.setFirstname(request.getFirstname());
+        u.setLastname(request.getLastname());
+        // encode provided password
+        u.setPassword(passwordEncoder.encode(request.getPassword()));
+        u.setDob(request.getDob());
+        u.setRole(User.UserRole.USER);
+
+        // createdAt and createdBy handled by BaseDocument / auditing annotations
+        return repository.save(u);
+    }
+
     
     @Transactional
     public User update(String id, UserRequest request) {

@@ -1,6 +1,7 @@
 package com.cms.service;
 
 import com.cms.dto.response.NewsletterSubscriberResponse;
+import com.cms.dto.response.PageResponse;
 import com.cms.model.NewsletterSubscriber;
 import com.cms.repository.NewsletterSubscriberRepository;
 import jakarta.mail.MessagingException;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.*;
 import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -19,12 +21,12 @@ import java.util.UUID;
 public class NewsletterSubscriberService {
 
     private final NewsletterSubscriberRepository repository;
-    private final GmailSmtpEmailService emailService;
+    private final EmailService emailService;
 
     /**
      * Return all subscribers (unsorted).
      */
-    public List<NewsletterSubscriberResponse> getAll() {
+    public List<NewsletterSubscriberResponse> findAll() {
         return repository.findAll()
                 .stream()
                 .map(this::mapEntityToResponse)
@@ -34,18 +36,36 @@ public class NewsletterSubscriberService {
     /**
      * Paginated listing
      */
-    public Page<NewsletterSubscriberResponse> getPaginated(int page, int size) {
+    public PageResponse<NewsletterSubscriberResponse> findPaginated(int page, int size) {
         // convert page param (1-based in controllers) to 0-based for Spring
         int p = Math.max(0, page - 1);
         Pageable pageable = PageRequest.of(p, Math.max(1, size), Sort.by(Sort.Direction.DESC, "createdAt"));
-        return repository.findAll(pageable).map(this::mapEntityToResponse);
+        Page<NewsletterSubscriberResponse> pageResponse = repository.findAll(pageable).map(this::mapEntityToResponse);
+        return new PageResponse<NewsletterSubscriberResponse>(
+                pageResponse.getContent(), pageResponse.getNumber(),
+                pageResponse.getSize(), pageResponse.getTotalPages()
+        );
     }
 
     /**
      * Return active subscribers sorted by provided Sort
      */
-    public List<NewsletterSubscriberResponse> getActiveSorted(Sort sort) {
+    public List<NewsletterSubscriberResponse> findActiveAndVerifiedSorted() {
+        return repository.findByActiveTrueAndVerifiedTrue().stream().map(this::mapEntityToResponse).toList();
+
+    }
+    public List<NewsletterSubscriberResponse> findActiveSorted(Sort sort) {
         return repository.findByActiveTrue(sort).stream().map(this::mapEntityToResponse).toList();
+
+    }
+    public PageResponse<NewsletterSubscriberResponse> findActiveAndVerifiedSortedPaged(int page, int size) {
+        int p = Math.max(0, page - 1);
+        Pageable pageable = PageRequest.of(p, Math.max(1, size), Sort.by(Sort.Direction.DESC, "updatedAt"));
+
+        Page<NewsletterSubscriberResponse> pageResponse = repository.findByActiveTrueAndVerifiedTrue(pageable)
+                .map(this::mapEntityToResponse);
+        return new PageResponse<NewsletterSubscriberResponse>(pageResponse.getContent(), pageResponse.getNumber(),
+                pageResponse.getSize(),pageResponse.getTotalPages());
     }
 
     public Optional<NewsletterSubscriberResponse> getById(String id) {
@@ -62,7 +82,7 @@ public class NewsletterSubscriberService {
      * - If exists and verified=false, refresh token.
      * - If not exists, create new.
      */
-    public NewsletterSubscriberResponse subscribe(String email) throws MessagingException, MailException {
+    public NewsletterSubscriberResponse subscribe(String email) throws MessagingException, MailException, IOException {
         String normalized = email.trim().toLowerCase();
         Optional<NewsletterSubscriber> existing = repository.findByEmail(normalized);
         NewsletterSubscriber s;
@@ -81,14 +101,7 @@ public class NewsletterSubscriberService {
             s.setActive(Boolean.TRUE);
             s.setVerified(Boolean.FALSE);
             s.setVerificationToken(generateToken());
-//            try{
-//                NewsletterSubscriber savedSubscriber = repository.save(s);
-//                emailService.sendPlain(normalized, "SDA Bulletin Subscription Verification",
-//                        "Verification Code: " + savedSubscriber.getVerificationToken());
-//
-//            } catch (Exception e) {
-//                System.out.println(e.getMessage());
-//            }
+
             NewsletterSubscriber savedSubscriber = repository.save(s);
             emailService.sendPlain(normalized, "SDA Bulletin Subscription Verification",
                     "Verification Code: " + savedSubscriber.getVerificationToken());

@@ -2,6 +2,7 @@ package com.cms.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.CreatedDate;
@@ -23,7 +24,8 @@ import java.util.Set;
 @Setter
 @Getter
 @Document(collection = "publications")
-public class Publication {
+//@RequiredArgsConstructor
+public class Publication extends BaseDocument{
     @Id
     private String id;
     
@@ -43,14 +45,10 @@ public class Publication {
     private LayoutType layoutType;
     
     private String author;
+
     private List<String> tags;
     private Boolean featured = false;
-    
-    @CreatedDate
-    private LocalDateTime createdAt;
-    
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+
 
     @DBRef(lazy = true)
     @Field(name = "publication_reaction")
@@ -72,38 +70,5 @@ public class Publication {
         this.date = date;
         this.layoutType = layoutType;
     }
-    
-//    // Getters and Setters
-//    public String getId() { return id; }
-//    public void setId(String id) { this.id = id; }
-//
-//    public String getTitle() { return title; }
-//    public void setTitle(String title) { this.title = title; }
-//
-//    public String getContent() { return content; }
-//    public void setContent(String content) { this.content = content; }
-//
-//    public String getImageUrl() { return imageUrl; }
-//    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-//
-//    public LocalDateTime getDate() { return date; }
-//    public void setDate(LocalDateTime date) { this.date = date; }
-//
-//    public LayoutType getLayoutType() { return layoutType; }
-//    public void setLayoutType(LayoutType layoutType) { this.layoutType = layoutType; }
-//
-//    public String getAuthor() { return author; }
-//    public void setAuthor(String author) { this.author = author; }
-//
-//    public List<String> getTags() { return tags; }
-//    public void setTags(List<String> tags) { this.tags = tags; }
-//
-//    public Boolean getFeatured() { return featured; }
-//    public void setFeatured(Boolean featured) { this.featured = featured; }
-//
-//    public LocalDateTime getCreatedAt() { return createdAt; }
-//    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-//
-//    public LocalDateTime getUpdatedAt() { return updatedAt; }
-//    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
 }

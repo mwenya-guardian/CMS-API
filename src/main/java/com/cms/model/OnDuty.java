@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 //@Document(collection = "OnDuty")
 public class OnDuty {
-//   e.g Deacon / pianist
+//  e.g Deacon / pianist
     private String role;
 //  Music / First Service
     private String activity;

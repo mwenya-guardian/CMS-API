@@ -65,5 +65,4 @@ public class Bulletin extends BaseDocument{
         DRAFT, PUBLISHED, SCHEDULED
     }
 
-    // audit fields are inherited from BaseDocument if you extend it
 }

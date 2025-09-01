@@ -1,6 +1,12 @@
 package com.cms.dto.response;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class FileUploadResponse {
+    // Getters and Setters
     private String url;
     private String filename;
     private long size;
@@ -15,17 +21,5 @@ public class FileUploadResponse {
         this.size = size;
         this.mimetype = mimetype;
     }
-    
-    // Getters and Setters
-    public String getUrl() { return url; }
-    public void setUrl(String url) { this.url = url; }
-    
-    public String getFilename() { return filename; }
-    public void setFilename(String filename) { this.filename = filename; }
-    
-    public long getSize() { return size; }
-    public void setSize(long size) { this.size = size; }
-    
-    public String getMimetype() { return mimetype; }
-    public void setMimetype(String mimetype) { this.mimetype = mimetype; }
+
 }

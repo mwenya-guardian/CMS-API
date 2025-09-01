@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -59,6 +60,7 @@ public class BulletinController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Bulletin>> createBulletin(
             @Valid @RequestBody BulletinRequest request
     ) {
@@ -67,6 +69,7 @@ public class BulletinController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Bulletin>> updateBulletin(
             @PathVariable String id,
             @Valid @RequestBody BulletinRequest request
@@ -76,6 +79,7 @@ public class BulletinController {
     }
 
     @PutMapping("/{id}/publish")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Bulletin>> updatePublishStatus(
             @PathVariable String id
     ) {
@@ -84,6 +88,7 @@ public class BulletinController {
     }
 
     @PutMapping("/{id}/unpublish")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Bulletin>> updateUnpublishStatus(
             @PathVariable String id
     ) {
@@ -91,14 +96,17 @@ public class BulletinController {
         return ResponseEntity.ok(ApiResponse.success(b));
     }
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBulletin(@PathVariable String id) {
         bulletinService.deleteBulletin(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/bulk")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<Bulletin>>> getBulletinsByIds(
             @RequestBody List<String> ids
+
     ) {
         List<Bulletin> items = bulletinService.getBulletinsByIds(ids);
         return ResponseEntity.ok(ApiResponse.success(items));

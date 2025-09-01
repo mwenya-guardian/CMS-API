@@ -93,9 +93,13 @@ public class BulletinService {
         applyRequestToBulletin(b, request);
         return bulletinRepository.save(b);
     }
+
     public Bulletin updateStatus(String id, PublicationStatus status){
         Bulletin b = bulletinRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("bulletin not found"));
+        if(status == PublicationStatus.PUBLISHED){
+            maintainStatus();
+        }
         b.setStatus(status);
         return bulletinRepository.save(b);
     }
@@ -171,7 +175,6 @@ public class BulletinService {
         bulletin.setTitle(req.getTitle());
         bulletin.setBulletinDate(req.getBulletinDate());
         bulletin.setContent(req.getContent());
-        bulletin.setStatus(req.getStatus());
         bulletin.setScheduledPublishAt(req.getScheduledPublishAt());
         bulletin.setAnnouncements(req.getAnnouncements());
         bulletin.setSchedules(req.getSchedules());
@@ -179,5 +182,17 @@ public class BulletinService {
         bulletin.setCover(req.getCover());
 
         bulletin.setAuthor(new User(authService.getCurrentUser().getId()));
+        if(req.getStatus() == PublicationStatus.PUBLISHED){
+            maintainStatus();
+        }
+        bulletin.setStatus(req.getStatus());
+
+    }
+    private void maintainStatus(){
+        List<Bulletin> publichedBulletinList = bulletinRepository.findByStatus(PublicationStatus.PUBLISHED);
+        List<Bulletin> updated = publichedBulletinList.stream()
+                .peek((savedBulletin)-> savedBulletin.setStatus(PublicationStatus.DRAFT))
+                .toList();
+        bulletinRepository.saveAll(updated);
     }
 }

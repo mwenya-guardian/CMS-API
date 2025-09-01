@@ -6,6 +6,7 @@ import com.cms.service.ChurchDetailsService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class ChurchDetailsController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ChurchDetails>> create(
             @Valid @RequestBody ChurchDetails request
     ) {
@@ -39,6 +41,7 @@ public class ChurchDetailsController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ChurchDetails>> update(
             @PathVariable String id,
             @Valid @RequestBody ChurchDetails request
@@ -48,6 +51,7 @@ public class ChurchDetailsController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         churchDetailsService.delete(id);
         return ResponseEntity.noContent().build();

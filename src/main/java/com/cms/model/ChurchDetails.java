@@ -14,7 +14,6 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@SuperBuilder
 @Document(collection = "church_details")
 public class ChurchDetails extends BaseDocument {
 

@@ -6,6 +6,9 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.nio.file.Path;
+import java.util.Objects;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
@@ -21,6 +24,15 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${cors.allow-credentials}")
     private boolean allowCredentials;
 
+    @Value("${file.upload.dir.main}")
+    private String uploadDir;
+
+    @Value("${file.upload.dir.public}")
+    private String uploadPublicSubDir;
+
+    @Value("${server.servlet.context-path:..}")
+    private String serverContextPath;
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
@@ -33,7 +45,13 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/uploads/**", "/api/uploads/**")
-                .addResourceLocations("file:./uploads/");
+        String initialPath = Path.of(uploadDir, uploadPublicSubDir).toString();
+        String uploadPath = "file:" + (initialPath.endsWith("/") ? uploadDir : uploadDir + "/");
+
+        String contextPath = Objects.equals(serverContextPath, "..") ?" ": serverContextPath;
+        String resourceUrlOption = String.format("%s/uploads/%s", contextPath, uploadPublicSubDir).trim();
+        registry.addResourceHandler(resourceUrlOption)
+                .addResourceLocations(uploadPath)
+                .setCachePeriod(3600);
     }
 }

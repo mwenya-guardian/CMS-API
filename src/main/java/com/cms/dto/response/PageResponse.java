@@ -1,8 +1,14 @@
 package com.cms.dto.response;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
+@Setter
+@Getter
 public class PageResponse<T> {
+    // Getters and Setters
     private List<T> data;
     private PaginationInfo pagination;
     
@@ -15,7 +21,10 @@ public class PageResponse<T> {
     }
     
     // Inner class for pagination info
+    @Setter
+    @Getter
     public static class PaginationInfo {
+        // Getters and Setters
         private int page;
         private int limit;
         private long total;
@@ -27,25 +36,7 @@ public class PageResponse<T> {
             this.total = total;
             this.totalPages = (int) Math.ceil((double) total / limit);
         }
-        
-        // Getters and Setters
-        public int getPage() { return page; }
-        public void setPage(int page) { this.page = page; }
-        
-        public int getLimit() { return limit; }
-        public void setLimit(int limit) { this.limit = limit; }
-        
-        public long getTotal() { return total; }
-        public void setTotal(long total) { this.total = total; }
-        
-        public int getTotalPages() { return totalPages; }
-        public void setTotalPages(int totalPages) { this.totalPages = totalPages; }
+
     }
-    
-    // Getters and Setters
-    public List<T> getData() { return data; }
-    public void setData(List<T> data) { this.data = data; }
-    
-    public PaginationInfo getPagination() { return pagination; }
-    public void setPagination(PaginationInfo pagination) { this.pagination = pagination; }
+
 }

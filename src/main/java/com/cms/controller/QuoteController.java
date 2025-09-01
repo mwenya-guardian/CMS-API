@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +31,7 @@ public class QuoteController {
     private ExportService exportService;
     
     @GetMapping
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<Quote>>> getAllQuotes(
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month,
@@ -66,12 +68,14 @@ public class QuoteController {
     }
     
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<Quote>> createQuote(@Valid @RequestBody QuoteRequest request) {
         Quote quote = quoteService.createQuote(request);
         return ResponseEntity.ok(ApiResponse.success(quote));
     }
     
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<Quote>> updateQuote(
             @PathVariable String id, @Valid @RequestBody QuoteRequest request) {
         Quote quote = quoteService.updateQuote(id, request);
@@ -79,6 +83,7 @@ public class QuoteController {
     }
     
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<Void> deleteQuote(@PathVariable String id) {
         quoteService.deleteQuote(id);
         return ResponseEntity.noContent().build();
@@ -108,8 +113,9 @@ public class QuoteController {
     }
     
     @PostMapping("/upload-image")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR)")
     public ResponseEntity<ApiResponse<FileUploadResponse>> uploadImage(@RequestParam("image") MultipartFile file) throws IOException {
-        FileUploadResponse response = fileService.uploadImage(file);
+        FileUploadResponse response = fileService.uploadImage(file, true);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

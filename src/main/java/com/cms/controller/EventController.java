@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -64,12 +65,14 @@ public class EventController {
     }
     
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<Event>> createEvent(@Valid @RequestBody EventRequest request) {
         Event event = eventService.createEvent(request);
         return ResponseEntity.ok(ApiResponse.success(event));
     }
     
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<Event>> updateEvent(
             @PathVariable String id, @Valid @RequestBody EventRequest request) {
         Event event = eventService.updateEvent(id, request);
@@ -77,6 +80,7 @@ public class EventController {
     }
     
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<Void> deleteEvent(@PathVariable String id) {
         eventService.deleteEvent(id);
         return ResponseEntity.noContent().build();
@@ -106,8 +110,9 @@ public class EventController {
     }
     
     @PostMapping("/upload-image")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<FileUploadResponse>> uploadImage(@RequestParam("image") MultipartFile file) throws IOException {
-        FileUploadResponse response = fileService.uploadImage(file);
+        FileUploadResponse response = fileService.uploadImage(file, true);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

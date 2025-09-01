@@ -13,7 +13,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
 public class Members extends BaseDocument {
 
     @Id

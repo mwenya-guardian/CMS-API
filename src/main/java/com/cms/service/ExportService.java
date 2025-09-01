@@ -220,6 +220,7 @@ public class ExportService {
         PdfWriter writer = new PdfWriter(baos);
         PdfDocument pdf = new PdfDocument(writer);
         Document document = new Document(pdf);
+
         
         // Add title
         document.add(new Paragraph("Church Bulletin")

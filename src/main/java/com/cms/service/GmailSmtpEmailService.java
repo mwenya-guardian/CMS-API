@@ -8,6 +8,7 @@ import com.cms.dto.EmailAttachment;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
+@Primary
 public class GmailSmtpEmailService implements EmailService {
 
     private final JavaMailSender mailSender;
@@ -30,7 +32,7 @@ public class GmailSmtpEmailService implements EmailService {
     }
 
     @Override
-    public void sendPlain(String to, String subject, String text) throws MailException, MessagingException {
+    public void sendPlain(String to, String subject, String text) throws MessagingException {
         MimeMessage mime = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mime, false, "UTF-8");
         helper.setFrom(fromAddress);

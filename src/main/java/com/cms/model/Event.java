@@ -24,7 +24,7 @@ import java.util.Set;
 @NoArgsConstructor
 //@RequiredArgsConstructor
 @Document(collection = "events")
-public class Event {
+public class Event extends BaseDocument{
     @Id
     private String id;
 
@@ -47,12 +47,6 @@ public class Event {
     private EventCategory category;
 
     private Boolean featured = false;
-
-    @CreatedDate
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
 
     @DBRef
     @Field(name = "event_reaction")

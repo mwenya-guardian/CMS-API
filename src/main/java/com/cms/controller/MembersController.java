@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.cms.dto.response.FileUploadResponse;
 import com.cms.service.FileService;
@@ -63,6 +64,7 @@ public class MembersController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Members>> create(
             @Valid @RequestBody Members request
     ) {
@@ -71,6 +73,7 @@ public class MembersController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Members>> update(
             @PathVariable String id,
             @Valid @RequestBody Members request
@@ -80,13 +83,15 @@ public class MembersController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
     @PostMapping("/upload-image")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<FileUploadResponse>> uploadImage(@RequestParam("image") MultipartFile file) throws IOException {
-        FileUploadResponse response = fileService.uploadImage(file);
+        FileUploadResponse response = fileService.uploadImage(file, true);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
