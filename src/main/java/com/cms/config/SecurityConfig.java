@@ -60,7 +60,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/quotes/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/church-details/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/bulletins/**").permitAll()
-//                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/uploads/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/members/positionType/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/members/position/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/giving/**").permitAll()

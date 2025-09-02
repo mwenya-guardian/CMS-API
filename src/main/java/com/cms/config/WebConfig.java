@@ -47,9 +47,8 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String initialPath = Path.of(uploadDir, uploadPublicSubDir).toString();
         String uploadPath = "file:" + (initialPath.endsWith("/") ? uploadDir : uploadDir + "/");
-
         String contextPath = Objects.equals(serverContextPath, "..") ?" ": serverContextPath;
-        String resourceUrlOption = String.format("%s/uploads/%s", contextPath, uploadPublicSubDir).trim();
+        String resourceUrlOption = String.format("%s/uploads/%s**", contextPath, uploadPublicSubDir).trim();
         registry.addResourceHandler(resourceUrlOption)
                 .addResourceLocations(uploadPath)
                 .setCachePeriod(3600);
