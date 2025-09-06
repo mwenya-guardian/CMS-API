@@ -84,7 +84,7 @@ public class QuoteController {
     
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
-    public ResponseEntity<Void> deleteQuote(@PathVariable String id) {
+    public ResponseEntity<Void> deleteQuote(@PathVariable String id) throws IOException {
         quoteService.deleteQuote(id);
         return ResponseEntity.noContent().build();
     }

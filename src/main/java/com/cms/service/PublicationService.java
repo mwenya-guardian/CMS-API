@@ -77,9 +77,11 @@ public class PublicationService {
         return publicationRepository.save(publication);
     }
     
-    public void deletePublication(String id) {
-        if (!publicationRepository.existsById(id)) {
-            throw new RuntimeException("Publication not found");
+    public void deletePublication(String id) throws IOException {
+        Publication publication = publicationRepository.findById(id).orElseThrow(()->
+                new RuntimeException("Publication not found"));
+        if(publication.getImageUrl() != null && !publication.getImageUrl().isBlank()){
+            fileService.deleteFile(publication.getImageUrl());
         }
         publicationRepository.deleteById(id);
     }

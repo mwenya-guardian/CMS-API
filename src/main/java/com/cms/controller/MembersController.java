@@ -84,7 +84,7 @@ public class MembersController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable String id) throws IOException {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }

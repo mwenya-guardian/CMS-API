@@ -79,9 +79,12 @@ public class MembersService {
 public FileUploadResponse uploadImage(MultipartFile file) throws IOException {
     return fileService.uploadImage(file, true);
 }
-    public void delete(String id) {
-        if (!repo.existsById(id)) {
-            throw new RuntimeException("Members not found");
+    public void delete(String id) throws IOException {
+        Members members = repo.findById(id).orElseThrow(()->
+          new RuntimeException("Member not found")
+        );
+        if(members.getPhotoUrl() !=null && !members.getPhotoUrl().isBlank()){
+            fileService.deleteFile(members.getPhotoUrl());
         }
         repo.deleteById(id);
     }

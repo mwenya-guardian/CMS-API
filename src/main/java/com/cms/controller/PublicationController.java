@@ -90,7 +90,7 @@ public class PublicationController {
     
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
-    public ResponseEntity<Void> deletePublication(@PathVariable String id) {
+    public ResponseEntity<Void> deletePublication(@PathVariable String id) throws IOException {
         publicationService.deletePublication(id);
         return ResponseEntity.noContent().build();
     }

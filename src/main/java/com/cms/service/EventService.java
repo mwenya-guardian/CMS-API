@@ -72,9 +72,12 @@ public class EventService {
         return eventRepository.save(event);
     }
     
-    public void deleteEvent(String id) {
-        if (!eventRepository.existsById(id)) {
-            throw new RuntimeException("Event not found");
+    public void deleteEvent(String id) throws IOException {
+        Event event = eventRepository.findById(id).orElseThrow(()->
+                new RuntimeException("Event not found")
+        );
+        if(event.getImageUrl() != null && !event.getImageUrl().isBlank()){
+            fileService.deleteFile(event.getImageUrl());
         }
         eventRepository.deleteById(id);
     }

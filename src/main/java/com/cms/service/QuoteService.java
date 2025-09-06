@@ -71,9 +71,11 @@ public class QuoteService {
         return quoteRepository.save(quote);
     }
     
-    public void deleteQuote(String id) {
-        if (!quoteRepository.existsById(id)) {
-            throw new RuntimeException("Quote not found");
+    public void deleteQuote(String id) throws IOException {
+        Quote quote = quoteRepository.findById(id).orElseThrow(()->
+                new RuntimeException("Quote not found"));
+        if(quote.getImageUrl() != null && !quote.getImageUrl().isBlank()){
+            fileService.deleteFile(quote.getImageUrl());
         }
         quoteRepository.deleteById(id);
     }
