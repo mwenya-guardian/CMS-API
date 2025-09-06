@@ -1,6 +1,7 @@
 package com.cms.service;
 
 import com.cms.dto.request.PublicationRequest;
+import com.cms.dto.response.FileUploadResponse;
 import com.cms.dto.response.PageResponse;
 import com.cms.model.Publication;
 import com.cms.repository.PublicationRepository;
@@ -15,7 +16,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +30,7 @@ public class PublicationService {
 
     private PublicationRepository publicationRepository;
     private MongoTemplate mongoTemplate;
+    private FileService fileService;
     
     public List<Publication> getAllPublications(Integer year, Integer month, Integer day, 
                                               String category, Boolean featured, String search) {
@@ -59,13 +63,13 @@ public class PublicationService {
         return publicationRepository.findByYear(startOfYear, startOfNextYear);
     }
     
-    public Publication createPublication(PublicationRequest request) {
+    public Publication createPublication(PublicationRequest request) throws IOException {
         Publication publication = new Publication();
         updatePublicationFromRequest(publication, request);
         return publicationRepository.save(publication);
     }
     
-    public Publication updatePublication(String id, PublicationRequest request) {
+    public Publication updatePublication(String id, PublicationRequest request) throws IOException {
         Publication publication = publicationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Publication not found"));
         
@@ -124,10 +128,9 @@ public class PublicationService {
         return query;
     }
     
-    private void updatePublicationFromRequest(Publication publication, PublicationRequest request) {
+    private void updatePublicationFromRequest(Publication publication, PublicationRequest request) throws IOException {
         publication.setTitle(request.getTitle());
         publication.setContent(request.getContent());
-        publication.setImageUrl(request.getImageUrl());
         publication.setDate(request.getDate());
         publication.setLayoutType(request.getLayoutType());
         publication.setAuthor(request.getAuthor());
@@ -135,5 +138,13 @@ public class PublicationService {
         if (request.getFeatured() != null) {
             publication.setFeatured(request.getFeatured());
         }
+        if(request.getImageUrl() == null || request.getImageUrl().isBlank()){
+            publication.setImageUrl(request.getImageUrl());
+            if(publication.getImageUrl() != null && !publication.getImageUrl().isBlank())
+                fileService.deleteFile(publication.getImageUrl());
+        }
+    }
+    public FileUploadResponse uploadImage(MultipartFile file, Boolean isPublic) throws IOException {
+        return fileService.uploadImage(file, isPublic);
     }
 }

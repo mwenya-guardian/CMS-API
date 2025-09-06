@@ -1,12 +1,15 @@
 package com.cms.service;
 
 import com.cms.dto.request.UserRequest;
+import com.cms.dto.response.PageResponse;
+import com.cms.dto.response.UserResponse;
 import com.cms.exception.BadRequestException;
 import com.cms.exception.DuplicateResourceException;
 import com.cms.exception.ResourceNotFoundException;
 import com.cms.model.User;
 import com.cms.repository.UserRepository;
 
+import com.cms.repository.UserVerificationRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,16 +28,19 @@ public class UserService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
 
+
     
     public List<User> getAll() {
         return repository.findAll();
     }
 
     
-    public Page<User> getPaginated(int page, int size) {
+    public PageResponse<UserResponse> getPaginated(int page, int size) {
         // controller used page default = 1; convert to 0-based page index here (caller may choose differently)
         int p = Math.max(0, page - 1);
-        return repository.findAll(PageRequest.of(p, size));
+
+        Page<User> userPage = repository.findAll(PageRequest.of(p, size));
+        return new PageResponse<>(userPage.getContent().stream().map(this::mapUserToUserResponse).toList(), userPage.getNumber(), userPage.getSize(), userPage.getTotalPages());
     }
 
     
@@ -150,6 +156,7 @@ public class UserService {
         return repository.save(u);
     }
 
+
     
     @Transactional
     public void updateLastLogin(String id) {
@@ -157,5 +164,8 @@ public class UserService {
             u.setLastLogin(LocalDateTime.now());
             repository.save(u);
         });
+    }
+    private UserResponse mapUserToUserResponse(User user){
+        return new UserResponse(user.getEmail(), user.getFirstname(), user.getLastname(), user.getDob(),user.getRole());
     }
 }

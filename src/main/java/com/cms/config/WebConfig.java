@@ -5,8 +5,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.resource.PathResourceResolver;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 
 @Configuration
@@ -45,12 +47,13 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String initialPath = Path.of(uploadDir, uploadPublicSubDir).toString();
-        String uploadPath = "file:" + (initialPath.endsWith("/") ? uploadDir : uploadDir + "/");
-        String contextPath = Objects.equals(serverContextPath, "..") ?" ": serverContextPath;
-        String resourceUrlOption = String.format("%s/uploads/%s**", contextPath, uploadPublicSubDir).trim();
+        String relativePath = String.format("%s%s/%s/", "file:", uploadDir, uploadPublicSubDir);
+        String uploadPath = uploadDir.replaceAll("[./]", "");
+        String resourceUrlOption = String.format("/%s/%s/**",uploadPath, uploadPublicSubDir);
         registry.addResourceHandler(resourceUrlOption)
-                .addResourceLocations(uploadPath)
-                .setCachePeriod(3600);
+                .addResourceLocations(relativePath)
+                .setCachePeriod(3600) //An hour
+                .resourceChain(true);
+
     }
 }

@@ -77,7 +77,7 @@ public class MembersController {
     public ResponseEntity<ApiResponse<Members>> update(
             @PathVariable String id,
             @Valid @RequestBody Members request
-    ) {
+    ) throws IOException {
         Members updated = service.update(id, request);
         return ResponseEntity.ok(ApiResponse.success(updated));
     }

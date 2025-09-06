@@ -69,7 +69,7 @@ public class QuoteController {
     
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
-    public ResponseEntity<ApiResponse<Quote>> createQuote(@Valid @RequestBody QuoteRequest request) {
+    public ResponseEntity<ApiResponse<Quote>> createQuote(@Valid @RequestBody QuoteRequest request) throws IOException {
         Quote quote = quoteService.createQuote(request);
         return ResponseEntity.ok(ApiResponse.success(quote));
     }
@@ -77,7 +77,7 @@ public class QuoteController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<Quote>> updateQuote(
-            @PathVariable String id, @Valid @RequestBody QuoteRequest request) {
+            @PathVariable String id, @Valid @RequestBody QuoteRequest request) throws IOException {
         Quote quote = quoteService.updateQuote(id, request);
         return ResponseEntity.ok(ApiResponse.success(quote));
     }
@@ -115,7 +115,7 @@ public class QuoteController {
     @PostMapping("/upload-image")
     @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR)")
     public ResponseEntity<ApiResponse<FileUploadResponse>> uploadImage(@RequestParam("image") MultipartFile file) throws IOException {
-        FileUploadResponse response = fileService.uploadImage(file, true);
+        FileUploadResponse response = quoteService.uploadImage(file, true);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

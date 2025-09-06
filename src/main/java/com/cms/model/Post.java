@@ -1,5 +1,6 @@
 package com.cms.model;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,8 +17,14 @@ public class Post extends BaseDocument{
     @Id
     private String Id;
 
+    @NotNull
+    private PostType type;
+
     private String caption;
 
-    private String resourceUrl;
+    private String resourceUrl; //image or video
 
+    public enum PostType{
+        MEDIA, TEXT
+    }
 }

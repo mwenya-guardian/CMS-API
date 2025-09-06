@@ -11,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,11 +36,12 @@ public class AuthService {
         );
         
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = tokenProvider.generateToken(authentication);
         
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByIdAndActiveTrue(userPrincipal.getId())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found or not activated"));
+
+        String jwt = tokenProvider.generateToken(authentication);
         
         // Update last login
         user.setLastLogin(LocalDateTime.now());
@@ -71,6 +73,7 @@ public class AuthService {
             admin.setDob(LocalDate.of(1999, 1, 1));
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setRole(User.UserRole.ADMIN);
+            admin.setActive(Boolean.TRUE);
             userRepository.save(admin);
         }
     }

@@ -1,9 +1,12 @@
 package com.cms.controller;
 
 import com.cms.dto.request.UserRequest;
+import com.cms.dto.response.PageResponse;
+import com.cms.dto.response.UserResponse;
 import com.cms.model.User;
 import com.cms.service.UserService;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import com.cms.dto.response.ApiResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,13 +16,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("users")
+@AllArgsConstructor
 public class UserController {
 
     private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<User>>  createUserPublic(@Valid @RequestBody UserRequest request) {
@@ -36,8 +36,11 @@ public class UserController {
 
     // Get all users
     @GetMapping
-    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
-        return ResponseEntity.ok(ApiResponse.success(userService.getAll()));
+    public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> getAllUsersPaginated(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getPaginated(page, limit)));
     }
 
     // Get user by ID

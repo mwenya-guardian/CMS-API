@@ -27,19 +27,25 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(System.currentTimeMillis() + jwtExpirationInMs);
         
         return Jwts.builder()
-                .setSubject(userPrincipal.getId())
-                .setIssuedAt(new Date())
-                .setExpiration(expiryDate)
+                .subject(userPrincipal.getId())
+//                .setSubject(userPrincipal.getId())
+                .issuedAt(new Date())
+//                .setIssuedAt(new Date())
+                .expiration(expiryDate)
+//                .setExpiration(expiryDate)
                 .signWith(getSigningKey())
                 .compact();
     }
     
     public String getUserIdFromToken(String token) {
         Claims claims = Jwts.parser()
-                .setSigningKey(getSigningKey())
+                .verifyWith(getSigningKey())
+//                .setSigningKey(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+//                .parseClaimsJws(token)
+                .getPayload();
+//                .getBody();
         
         return claims.getSubject();
     }
@@ -47,9 +53,11 @@ public class JwtTokenProvider {
     public boolean validateToken(String authToken) {
         try {
             Jwts.parser()
-                .setSigningKey(getSigningKey())
+                    .verifyWith(getSigningKey())
+//                .setSigningKey(getSigningKey())
                 .build()
-                .parseClaimsJws(authToken);
+                    .parseSignedClaims(authToken);
+//                .parseClaimsJws(authToken);
             return true;
         } catch (SecurityException ex) {
             System.err.println("Invalid JWT signature");
@@ -67,10 +75,13 @@ public class JwtTokenProvider {
     
     public Date getExpirationDateFromToken(String token) {
         Claims claims = Jwts.parser()
-                .setSigningKey(getSigningKey())
+                .verifyWith(getSigningKey())
+//                .setSigningKey(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+//                .parseClaimsJws(token)
+                .getPayload();
+//                .getBody();
         
         return claims.getExpiration();
     }

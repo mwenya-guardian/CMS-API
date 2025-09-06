@@ -2,6 +2,8 @@ package com.cms.service;
 
 import com.cms.dto.response.FileUploadResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -116,6 +118,45 @@ public class FileService {
                 contentType
         );
     }
+
+    public void deleteFile(String fileUrl) throws IOException {
+        int uploadDirIndex = fileUrl.indexOf(uploadDir.replaceAll("[./]", ""));
+        if(uploadDirIndex < 0){
+            throw new IllegalArgumentException("Invalid file url");
+        }
+        String relativeFilePath = fileUrl.substring(uploadDirIndex);
+        Path base = Path.of(relativeFilePath).toAbsolutePath();
+        if (!Files.exists(base) || Files.isDirectory(base)) {
+            throw new RuntimeException("File not found");
+        }
+        Files.deleteIfExists(base);
+    }
+
+    /**
+     * Load a file as a Resource given a relative path previously returned by uploadMedia/uploadImage.
+     * Example relativePath: "protected/photos/2025/uuid.jpg"
+     * IMPORTANT: This method normalizes path and ensures it is under uploadDir.
+     */
+    public Resource loadAsResource(String fileUrl) {
+        int uploadDirIndex = fileUrl.indexOf(uploadDir.replaceAll("[./]", ""));
+        if(uploadDirIndex < 0){
+            throw new IllegalArgumentException("Invalid file url");
+        }
+        String relativeFilePath = fileUrl.substring(uploadDirIndex);
+        try {
+            Path base = Paths.get(relativeFilePath).toAbsolutePath();
+            if (!Files.exists(base) || Files.isDirectory(base)) {
+                throw new RuntimeException("File not found");
+            }
+
+            return new FileSystemResource(base.toFile());
+        } catch (SecurityException se) {
+            throw se;
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to load file resource: " + fileUrl, ex);
+        }
+    }
+
 
     // Shared validations
     private void validateCommon(MultipartFile file) {

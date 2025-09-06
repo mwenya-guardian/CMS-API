@@ -18,7 +18,6 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
 @Document(collection = "bulletins")
 public class Bulletin extends BaseDocument{
 

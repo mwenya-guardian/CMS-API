@@ -1,23 +1,26 @@
 package com.cms.model;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import java.time.Instant;
 
 @Document
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@SuperBuilder
 public class PublicationReaction extends ReactionBaseDocument {
     @DBRef(lazy = true)
     @Indexed
     private Publication publication;
+
+    public PublicationReaction(Publication publication, User user, ReactionType type, String comment) {
+        super(user, type, comment);
+        this.publication = publication;
+    }
 }

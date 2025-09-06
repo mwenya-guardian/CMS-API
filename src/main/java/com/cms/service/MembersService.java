@@ -1,5 +1,6 @@
 package com.cms.service;
 
+import com.cms.dto.response.FileUploadResponse;
 import com.cms.model.Members;
 import com.cms.repository.MembersRepository;
 import lombok.AllArgsConstructor;
@@ -8,7 +9,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +20,7 @@ import java.util.Optional;
 public class MembersService {
 
     private final MembersRepository repo;
+    private final FileService fileService;
 
     public List<Members> getAll() {
         return repo.findAll(Sort.by(Sort.Direction.ASC, "position"));
@@ -39,32 +43,42 @@ public class MembersService {
     public Optional<Members> getMembersById(String id) {
         return repo.findById(id);
     }
-    public Members create(Members incoming) {
+    public Members create(Members request) {
         // if displayOrder not set, you could compute max+1 here
         Members newMembers = new Members();
-        newMembers.setPosition(incoming.getPosition().toLowerCase());
-        newMembers.setFirstname(incoming.getFirstname().toLowerCase());
-        newMembers.setLastname(incoming.getLastname().toLowerCase());
-        newMembers.setPositionType(incoming.getPositionType().toLowerCase());
-        newMembers.setPhotoUrl(incoming.getPhotoUrl());
-        newMembers.setEmail(incoming.getEmail());
-        newMembers.setPhone(incoming.getPhone());
+        newMembers.setPosition(request.getPosition().toLowerCase());
+        newMembers.setFirstname(request.getFirstname().toLowerCase());
+        newMembers.setLastname(request.getLastname().toLowerCase());
+        newMembers.setPositionType(request.getPositionType().toLowerCase());
+        newMembers.setPhotoUrl(request.getPhotoUrl());
+        newMembers.setEmail(request.getEmail());
+        newMembers.setPhone(request.getPhone());
         return repo.save(newMembers);
     }
 
-    public Members update(String id, Members incoming) {
+    public Members update(String id, Members request) throws IOException {
         Members existing = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Members not found"));
         // copy updatable fields
-        existing.setPosition(incoming.getPosition().toLowerCase());
-        existing.setFirstname(incoming.getFirstname().toLowerCase());
-        existing.setLastname(incoming.getLastname().toLowerCase());
-        existing.setPositionType(incoming.getPositionType().toLowerCase());
-        existing.setPhotoUrl(incoming.getPhotoUrl());
-        existing.setEmail(incoming.getEmail());
-        existing.setPhone(incoming.getPhone());
+        existing.setPosition(request.getPosition().toLowerCase());
+        existing.setFirstname(request.getFirstname().toLowerCase());
+        existing.setLastname(request.getLastname().toLowerCase());
+        existing.setPositionType(request.getPositionType().toLowerCase());
+        if(request.getPhotoUrl() == null || request.getPhotoUrl().isBlank()){
+            existing.setPhotoUrl(request.getPhotoUrl());
+            if(existing.getPhotoUrl() != null && !existing.getPhotoUrl().isBlank())
+                fileService.deleteFile(existing.getPhotoUrl());
+        }
+        existing.setPhotoUrl(request.getPhotoUrl());
+        existing.setEmail(request.getEmail());
+        existing.setPhone(request.getPhone());
         return repo.save(existing);
     }
+
+
+public FileUploadResponse uploadImage(MultipartFile file) throws IOException {
+    return fileService.uploadImage(file, true);
+}
     public void delete(String id) {
         if (!repo.existsById(id)) {
             throw new RuntimeException("Members not found");

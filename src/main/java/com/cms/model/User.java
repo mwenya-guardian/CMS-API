@@ -43,10 +43,11 @@ public class User extends BaseDocument{
     private String password;
     
     private UserRole role = UserRole.VIEWER;
-//    private String avatar;
 
     private LocalDate dob;
     private LocalDateTime lastLogin;
+
+    private Boolean active = Boolean.FALSE;
     
     public enum UserRole {
         ADMIN, EDITOR, USER, VIEWER

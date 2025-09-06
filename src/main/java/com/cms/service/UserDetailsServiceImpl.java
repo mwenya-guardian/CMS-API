@@ -4,8 +4,6 @@ import com.cms.model.User;
 import com.cms.repository.UserRepository;
 import com.cms.security.UserPrincipal;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,15 +19,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailAndActiveTrue(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
         
         return UserPrincipal.create(user);
     }
     
     @Transactional
-    public UserDetails loadUserById(String id) {
-        User user = userRepository.findById(id)
+    public UserDetails loadUserByIdAndActiveTrue(String id) {
+        User user = userRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
         
         return UserPrincipal.create(user);

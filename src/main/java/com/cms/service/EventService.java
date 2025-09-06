@@ -1,6 +1,8 @@
 package com.cms.service;
 
 import com.cms.dto.request.EventRequest;
+import com.cms.dto.response.ApiResponse;
+import com.cms.dto.response.FileUploadResponse;
 import com.cms.dto.response.PageResponse;
 import com.cms.model.Event;
 import com.cms.repository.EventRepository;
@@ -13,8 +15,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +31,7 @@ import java.util.Optional;
 public class EventService {
     private EventRepository eventRepository;
     private MongoTemplate mongoTemplate;
+    private FileService fileService;
     
     public List<Event> getAllEvents(Integer year, Integer month, Integer day, 
                                   String category, Boolean featured, String search) {
@@ -51,13 +58,13 @@ public class EventService {
         return eventRepository.findById(id);
     }
     
-    public Event createEvent(EventRequest request) {
+    public Event createEvent(EventRequest request) throws IOException {
         Event event = new Event();
         updateEventFromRequest(event, request);
         return eventRepository.save(event);
     }
     
-    public Event updateEvent(String id, EventRequest request) {
+    public Event updateEvent(String id, EventRequest request) throws IOException {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
         
@@ -121,16 +128,22 @@ public class EventService {
         return query;
     }
     
-    private void updateEventFromRequest(Event event, EventRequest request) {
+    private void updateEventFromRequest(Event event, EventRequest request) throws IOException {
         event.setTitle(request.getTitle());
         event.setDescription(request.getDescription());
-        event.setImageUrl(request.getImageUrl());
         event.setStartDate(request.getStartDate());
         event.setEndDate(request.getEndDate());
         event.setLocation(request.getLocation());
         event.setCategory(request.getCategory());
-        if (request.getFeatured() != null) {
-            event.setFeatured(request.getFeatured());
+        event.setFeatured(request.getFeatured());
+
+        if(request.getImageUrl() == null || request.getImageUrl().isBlank()){
+            event.setImageUrl(request.getImageUrl());
+            if(event.getImageUrl() != null && !event.getImageUrl().isBlank())
+                fileService.deleteFile(event.getImageUrl());
         }
+    }
+    public FileUploadResponse uploadImage(MultipartFile file, Boolean isPublic) throws IOException {
+        return fileService.uploadImage(file, isPublic);
     }
 }

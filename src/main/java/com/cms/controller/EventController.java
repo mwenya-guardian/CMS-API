@@ -66,7 +66,7 @@ public class EventController {
     
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
-    public ResponseEntity<ApiResponse<Event>> createEvent(@Valid @RequestBody EventRequest request) {
+    public ResponseEntity<ApiResponse<Event>> createEvent(@Valid @RequestBody EventRequest request) throws IOException {
         Event event = eventService.createEvent(request);
         return ResponseEntity.ok(ApiResponse.success(event));
     }
@@ -74,7 +74,7 @@ public class EventController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<Event>> updateEvent(
-            @PathVariable String id, @Valid @RequestBody EventRequest request) {
+            @PathVariable String id, @Valid @RequestBody EventRequest request) throws IOException {
         Event event = eventService.updateEvent(id, request);
         return ResponseEntity.ok(ApiResponse.success(event));
     }
@@ -112,7 +112,7 @@ public class EventController {
     @PostMapping("/upload-image")
     @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<FileUploadResponse>> uploadImage(@RequestParam("image") MultipartFile file) throws IOException {
-        FileUploadResponse response = fileService.uploadImage(file, true);
+        FileUploadResponse response = eventService.uploadImage(file, true);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

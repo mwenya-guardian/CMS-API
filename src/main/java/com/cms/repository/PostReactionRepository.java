@@ -13,5 +13,4 @@ public interface PostReactionRepository extends MongoRepository<PostReaction, St
     List<PostReaction> findByUserIdAndPostIdAndType(String userId, String postId, ReactionBaseDocument.ReactionType type);
     long countByUserIdAndPostIdAndType(String userId, String postId, ReactionBaseDocument.ReactionType type);
     long countByPostIdAndType(String postId, ReactionBaseDocument.ReactionType type);
-
 }

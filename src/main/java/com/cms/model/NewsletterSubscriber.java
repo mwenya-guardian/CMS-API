@@ -16,7 +16,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
+//@SuperBuilder
 public class NewsletterSubscriber extends BaseDocument {
 
     @Id

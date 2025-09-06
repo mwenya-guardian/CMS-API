@@ -1,6 +1,7 @@
 package com.cms.service;
 
 import com.cms.dto.request.QuoteRequest;
+import com.cms.dto.response.FileUploadResponse;
 import com.cms.dto.response.PageResponse;
 import com.cms.model.Quote;
 import com.cms.repository.QuoteRepository;
@@ -13,20 +14,23 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 @AllArgsConstructor
-//@NoArgsConstructor
+//@NoArgsConstructor never add this to a service it make the dependencies null during injection
 public class QuoteService {
     
 
     private QuoteRepository quoteRepository;
     private MongoTemplate mongoTemplate;
+    private FileService fileService;
     
     public List<Quote> getAllQuotes(Integer year, Integer month, Integer day, 
                                   String category, Boolean featured, String search) {
@@ -53,13 +57,13 @@ public class QuoteService {
         return quoteRepository.findById(id);
     }
     
-    public Quote createQuote(QuoteRequest request) {
+    public Quote createQuote(QuoteRequest request) throws IOException {
         Quote quote = new Quote();
         updateQuoteFromRequest(quote, request);
         return quoteRepository.save(quote);
     }
     
-    public Quote updateQuote(String id, QuoteRequest request) {
+    public Quote updateQuote(String id, QuoteRequest request) throws IOException {
         Quote quote = quoteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Quote not found"));
         
@@ -118,14 +122,22 @@ public class QuoteService {
         return query;
     }
     
-    private void updateQuoteFromRequest(Quote quote, QuoteRequest request) {
+    private void updateQuoteFromRequest(Quote quote, QuoteRequest request) throws IOException {
         quote.setText(request.getText());
         quote.setAuthor(request.getAuthor());
         quote.setSource(request.getSource());
         quote.setCategory(request.getCategory());
-        quote.setImageUrl(request.getImageUrl());
         if (request.getFeatured() != null) {
             quote.setFeatured(request.getFeatured());
         }
+        if(request.getImageUrl() == null || request.getImageUrl().isBlank()){
+            quote.setImageUrl(request.getImageUrl());
+            if(quote.getImageUrl() != null && !quote.getImageUrl().isBlank())
+                fileService.deleteFile(quote.getImageUrl());
+        }
     }
+    public FileUploadResponse uploadImage(MultipartFile file, Boolean isPublic) throws IOException {
+        return fileService.uploadImage(file, isPublic);
+    }
+        
 }

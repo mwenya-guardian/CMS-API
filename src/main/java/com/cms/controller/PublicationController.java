@@ -75,7 +75,7 @@ public class PublicationController {
     
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
-    public ResponseEntity<ApiResponse<Publication>> createPublication(@Valid @RequestBody PublicationRequest request) {
+    public ResponseEntity<ApiResponse<Publication>> createPublication(@Valid @RequestBody PublicationRequest request) throws IOException {
         Publication publication = publicationService.createPublication(request);
         return ResponseEntity.ok(ApiResponse.success(publication));
     }
@@ -83,7 +83,7 @@ public class PublicationController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<Publication>> updatePublication(
-            @PathVariable String id, @Valid @RequestBody PublicationRequest request) {
+            @PathVariable String id, @Valid @RequestBody PublicationRequest request) throws IOException {
         Publication publication = publicationService.updatePublication(id, request);
         return ResponseEntity.ok(ApiResponse.success(publication));
     }
@@ -144,7 +144,7 @@ public class PublicationController {
     @PostMapping("/upload-image")
     @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<ApiResponse<FileUploadResponse>> uploadImage(@RequestParam("image") MultipartFile file) throws IOException {
-        FileUploadResponse response = fileService.uploadImage(file, true);
+        FileUploadResponse response = publicationService.uploadImage(file, true);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

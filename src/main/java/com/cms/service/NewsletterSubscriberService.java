@@ -124,13 +124,14 @@ public class NewsletterSubscriberService {
         if (token == null || token.isBlank()) return false;
         NewsletterSubscriber subscriber = repository.findByEmail(email).orElseThrow();
         if(subscriber.getVerified())
-            return subscriber.getVerified();
-            if (token.equals(subscriber.getVerificationToken())) {
-                subscriber.setVerified(Boolean.TRUE);
-                subscriber.setVerificationToken(null);
-                repository.save(subscriber);
-                return true;
-            }
+            return true;
+
+        if (token.equals(subscriber.getVerificationToken())) {
+            subscriber.setVerified(Boolean.TRUE);
+            subscriber.setVerificationToken(null);
+            repository.save(subscriber);
+            return true;
+        }
 
         return false;
     }

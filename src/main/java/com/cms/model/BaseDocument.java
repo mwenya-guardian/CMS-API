@@ -15,7 +15,6 @@ import java.time.Instant;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
 public abstract class BaseDocument {
     @CreatedDate
     @Field("created_at")

@@ -12,7 +12,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Getter
 @Setter
 @NoArgsConstructor
-@SuperBuilder
 @Document(collection = "announcements")
 public class Announcement extends BaseDocument{
 

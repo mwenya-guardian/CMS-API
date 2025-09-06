@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,4 +34,7 @@ public interface PublicationRepository extends MongoRepository<Publication, Stri
     
     @Query("{ 'date': { $gte: ?0, $lt: ?1 } }")
     List<Publication> findByYear(LocalDateTime startOfYear, LocalDateTime startOfNextYear);
+
+    long countByDate(LocalDateTime year);
+    long countByUpdatedAtBetween(Instant start, Instant end);
 }

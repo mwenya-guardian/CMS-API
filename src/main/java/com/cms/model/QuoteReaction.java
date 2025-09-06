@@ -11,10 +11,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Getter
 @Setter
 @NoArgsConstructor
-@SuperBuilder
 @Document
 public class QuoteReaction extends ReactionBaseDocument {
     @DBRef(lazy = true)
     @Indexed
     private Quote quote;
+
+    public QuoteReaction(Quote quote, User user, ReactionType type, String comment){
+        super(user, type, comment);
+        this.quote = quote;
+    }
 }
