@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.util.Optional;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -94,6 +95,20 @@ public class ReactionService {
             case PUBLICATION -> publicationReactionRepo.findById(id);
             case EVENT -> eventReactionRepo.findById(id);
             case QUOTE -> quoteReactionRepo.findById(id);
+        };
+    }
+    // -----------------------
+    // Read
+    // -----------------------
+    public List<? extends ReactionBaseDocument> findByTypeAndId(ReactionBaseDocument.ReactionType type, ReactionCategory category, String id) {
+        Assert.notNull(type, "type must not be null");
+        Assert.notNull(category, "category must not be null");
+
+        return switch (category) {
+            case POST -> postReactionRepo.findByPostIdAndType(id, type);
+            case PUBLICATION -> publicationReactionRepo.findByPublicationIdAndType(id, type);
+            case EVENT -> eventReactionRepo.findByEventIdAndType(id, type);
+            case QUOTE -> quoteReactionRepo.findByQuoteIdAndType(id, type);
         };
     }
 

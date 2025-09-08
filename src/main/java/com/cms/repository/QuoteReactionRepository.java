@@ -11,6 +11,7 @@ public interface QuoteReactionRepository extends MongoRepository<QuoteReaction, 
     // find all reactions for a specific quote
     List<QuoteReaction> findByQuoteId(String quoteId);
     List<QuoteReaction> findByUserId(String userId);
+    List<QuoteReaction> findByQuoteIdAndType(String quoteId, ReactionBaseDocument.ReactionType type);
     List<QuoteReaction> findByUserIdAndQuoteIdAndType(String userId, String quoteId, ReactionBaseDocument.ReactionType type);
     long countByUserIdAndQuoteIdAndType(String userId, String quoteId, ReactionBaseDocument.ReactionType type);
     long countByQuoteIdAndType(String quoteId, ReactionBaseDocument.ReactionType type);

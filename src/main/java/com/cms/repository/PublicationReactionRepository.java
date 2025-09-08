@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface PublicationReactionRepository extends MongoRepository<PublicationReaction, String> {
     List<PublicationReaction> findByPublicationId(String publicationId);
+    List<PublicationReaction> findByPublicationIdAndType(String publicationId, ReactionBaseDocument.ReactionType type);
     List<PublicationReaction> findByUserId(String userId);
     List<PublicationReaction> findByUserIdAndPublicationIdAndType(String userId, String publicationId, ReactionBaseDocument.ReactionType type);
     long countByUserIdAndPublicationIdAndType(String userId, String publicationId, ReactionBaseDocument.ReactionType type);

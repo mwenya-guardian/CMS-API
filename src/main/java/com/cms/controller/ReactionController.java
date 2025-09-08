@@ -14,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
+import java.util.List;
 
 /**
  * Controller for managing reactions across different categories (POST, PUBLICATION, EVENT, QUOTE).
@@ -75,7 +76,29 @@ public class ReactionController {
                     .body(ApiResponse.error("Failed to fetch reaction"));
         }
     }
-
+    /**
+     * Read reaction by id within a category.
+     */
+    @GetMapping("/{category}/{type}/{id}")
+    public ResponseEntity<ApiResponse<List<ReactionResponse>>> getByType(
+            @PathVariable("category") ReactionService.ReactionCategory category,
+            @PathVariable("type") ReactionBaseDocument.ReactionType type,
+            @PathVariable("id") String id
+    ) {
+        try {
+            List<? extends ReactionBaseDocument> found = reactionService.findByTypeAndId(type, category, id);
+            if (found == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("Reaction null found"));
+            }
+            return ResponseEntity.ok(ApiResponse.success(found.stream().map(r -> reactionMappers.mapToResponse(r, category)).toList()));
+        } catch (IllegalArgumentException iae) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(iae.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to fetch reaction"));
+        }
+    }
     /**
      * Update reaction (replace allowed fields).
      */
