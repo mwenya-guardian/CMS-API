@@ -5,6 +5,8 @@ import com.cms.dto.request.UpdateReactionRequest;
 import com.cms.dto.response.ApiResponse;
 import com.cms.dto.response.ReactionResponse;
 import com.cms.model.*;
+import com.cms.model.ReactionBaseDocument.ReactionType;
+import com.cms.service.AuthService;
 import com.cms.service.ReactionService;
 import com.cms.utils.ReactionMappers;
 import lombok.AllArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -31,6 +34,7 @@ import java.util.List;
 public class ReactionController {
 
     private final ReactionService reactionService;
+    private final AuthService authService;
     private final ReactionMappers reactionMappers;
 
     /**
@@ -51,7 +55,7 @@ public class ReactionController {
             return ResponseEntity.badRequest().body(ApiResponse.error(iae.getMessage()));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to create reaction"));
+                    .body(ApiResponse.error(ex.getMessage()));
         }
     }
 
@@ -80,18 +84,71 @@ public class ReactionController {
      * Read reaction by id within a category.
      */
     @GetMapping("/{category}/{type}/{id}")
-    public ResponseEntity<ApiResponse<List<ReactionResponse>>> getByType(
+    public ResponseEntity<ApiResponse<List<ReactionResponse>>> getByTypeAndTarget(
             @PathVariable("category") ReactionService.ReactionCategory category,
             @PathVariable("type") ReactionBaseDocument.ReactionType type,
             @PathVariable("id") String id
     ) {
         try {
-            List<? extends ReactionBaseDocument> found = reactionService.findByTypeAndId(type, category, id);
+            List<? extends ReactionBaseDocument> found = reactionService.findByTypeAndTargetId(type, category, id);
             if (found == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.error("Reaction null found"));
             }
             return ResponseEntity.ok(ApiResponse.success(found.stream().map(r -> reactionMappers.mapToResponse(r, category)).toList()));
+        } catch (IllegalArgumentException iae) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(iae.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to fetch reaction"));
+        }
+    }
+    @GetMapping("/{category}/{type}/{id}/me")
+    public ResponseEntity<ApiResponse<List<ReactionResponse>>> getByTypeAndUSerAndTarget(
+            @PathVariable("category") ReactionService.ReactionCategory category,
+            @PathVariable("type") ReactionBaseDocument.ReactionType type,
+            // @PathVariable("user") String userId,
+            @PathVariable("id") String targetId
+    ) {
+        try {
+            List<? extends ReactionBaseDocument> found = reactionService
+                    .findByUserIdAndTypeAndTargetId(authService.getCurrentUser().getId(), type, category, targetId);
+            if (found == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("Reaction null found"));
+            }
+            return ResponseEntity.ok(ApiResponse.success(found.stream().map(r -> reactionMappers.mapToResponse(r, category)).toList()));
+        } catch (IllegalArgumentException iae) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(iae.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to fetch reaction"));
+        }
+    }
+    @GetMapping("/count/{category}/{type}/{id}")
+    public ResponseEntity<ApiResponse<Long>> getCountByTypeAndTarget(
+            @PathVariable("category") ReactionService.ReactionCategory category,
+            @PathVariable("type") ReactionBaseDocument.ReactionType type,
+            @PathVariable("id") String id
+    ) {
+        try {
+            long reactionCount = reactionService.countByTypeAndTargetId(type, category, id);
+            return ResponseEntity.ok(ApiResponse.success(reactionCount));
+        } catch (IllegalArgumentException iae) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(iae.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to fetch reaction"));
+        }
+    }
+    @GetMapping("/count/{category}/{id}")
+    public ResponseEntity<ApiResponse<HashMap<ReactionType, Long>>> getCountByTarget(
+            @PathVariable("category") ReactionService.ReactionCategory category,
+            @PathVariable("id") String id
+    ) {
+        try {
+            HashMap<ReactionType, Long> reactionCount = reactionService.countByTargetId(category, id);
+            return ResponseEntity.ok(ApiResponse.success(reactionCount));
         } catch (IllegalArgumentException iae) {
             return ResponseEntity.badRequest().body(ApiResponse.error(iae.getMessage()));
         } catch (Exception ex) {
@@ -146,6 +203,21 @@ public class ReactionController {
     ) {
         try {
             reactionService.deleteReaction(id, category);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException iae) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    @DeleteMapping("/{category}/{type}/{id}/me")
+    public ResponseEntity<Void> deleteReaction(
+            @PathVariable("category") ReactionService.ReactionCategory category,
+            @PathVariable("type") ReactionType type,
+            @PathVariable("id") String targetId
+    ) {
+        try {
+            reactionService.deleteReactionByUserAndTargetAndLikeOrDislike(category, targetId, type);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException iae) {
             return ResponseEntity.badRequest().build();

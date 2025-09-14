@@ -1,15 +1,19 @@
 package com.cms.service;
 
+import com.cms.exception.DuplicateResourceException;
 import com.cms.model.*;
+import com.cms.model.ReactionBaseDocument.ReactionType;
 import com.cms.repository.EventReactionRepository;
 import com.cms.repository.PostReactionRepository;
 import com.cms.repository.PublicationReactionRepository;
 import com.cms.repository.QuoteReactionRepository;
 import lombok.AllArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.util.Optional;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -75,11 +79,32 @@ public class ReactionService {
     public ReactionBaseDocument createReaction(ReactionBaseDocument reaction, ReactionCategory reactionCategory) {
         Assert.notNull(reaction, "reaction must not be null");
 
+        String currentUserId = authService.getCurrentUser().getId();
         ReactionCategory category = detectCategoryFromInstance(reaction);
         if(category != reactionCategory){
             throw new IllegalArgumentException("Path category and reaction category do not match");
         }
-        reaction.getUser().setId(authService.getCurrentUser().getId());
+        if(reaction.getType() == ReactionBaseDocument.ReactionType.LIKE
+           || reaction.getType() == ReactionBaseDocument.ReactionType.DISLIKE){
+            List<? extends ReactionBaseDocument> currentReaction = switch (category) {
+                case POST -> postReactionRepo.findByTypeNotAndUserIdAndPostId(ReactionBaseDocument.ReactionType.COMMENT, currentUserId,((PostReaction) reaction).getPost().getId());
+                case PUBLICATION -> publicationReactionRepo.findByTypeNotAndUserIdAndPublicationId(ReactionBaseDocument.ReactionType.COMMENT, currentUserId,((PublicationReaction) reaction).getPublication().getId());
+                case EVENT -> eventReactionRepo.findByTypeNotAndUserIdAndEventId(ReactionBaseDocument.ReactionType.COMMENT, currentUserId,((EventReaction) reaction).getEvent().getId());
+                case QUOTE -> quoteReactionRepo.findByTypeNotAndUserIdAndQuoteId(ReactionBaseDocument.ReactionType.COMMENT, currentUserId,((QuoteReaction) reaction).getQuote().getId());
+            };
+
+            if(!currentReaction.isEmpty()){
+                currentReaction.removeFirst();
+                currentReaction.stream().peek((react) -> {
+                    if(reaction.getType() == ReactionBaseDocument.ReactionType.LIKE
+                            || reaction.getType() == ReactionBaseDocument.ReactionType.DISLIKE){
+                        deleteReaction(react.getId(), category);
+                    }
+                });
+                throw new DuplicateResourceException("LIKE OR DISLIKE is already present");
+            }
+        }
+        reaction.getUser().setId(currentUserId);
         return createReactionByCategory(reaction, category);
     }
 
@@ -97,18 +122,48 @@ public class ReactionService {
             case QUOTE -> quoteReactionRepo.findById(id);
         };
     }
-    // -----------------------
-    // Read
-    // -----------------------
-    public List<? extends ReactionBaseDocument> findByTypeAndId(ReactionBaseDocument.ReactionType type, ReactionCategory category, String id) {
+    public List<? extends ReactionBaseDocument> findByTypeAndTargetId(ReactionBaseDocument.ReactionType type, ReactionCategory category, String targetId) {
         Assert.notNull(type, "type must not be null");
         Assert.notNull(category, "category must not be null");
 
         return switch (category) {
-            case POST -> postReactionRepo.findByPostIdAndType(id, type);
-            case PUBLICATION -> publicationReactionRepo.findByPublicationIdAndType(id, type);
-            case EVENT -> eventReactionRepo.findByEventIdAndType(id, type);
-            case QUOTE -> quoteReactionRepo.findByQuoteIdAndType(id, type);
+            case POST -> postReactionRepo.findByPostIdAndType(targetId, type);
+            case PUBLICATION -> publicationReactionRepo.findByPublicationIdAndType(targetId, type);
+            case EVENT -> eventReactionRepo.findByEventIdAndType(targetId, type);
+            case QUOTE -> quoteReactionRepo.findByQuoteIdAndType(targetId, type);
+        };
+    }
+    public long countByTypeAndTargetId(ReactionBaseDocument.ReactionType type, ReactionCategory category, String id) {
+        Assert.notNull(type, "type must not be null");
+        Assert.notNull(category, "category must not be null");
+
+        return switch (category) {
+            case POST -> postReactionRepo.countByPostIdAndType(id, type);
+            case PUBLICATION -> publicationReactionRepo.countByPublicationIdAndType(id, type);
+            case EVENT -> eventReactionRepo.countByEventIdAndType(id, type);
+            case QUOTE -> quoteReactionRepo.countByQuoteIdAndType(id, type);
+        };
+    }
+    public HashMap<ReactionType, Long> countByTargetId(ReactionCategory category, String id) {
+        HashMap<ReactionType, Long> reactionCountMap = new HashMap<>();
+        Long likeCount = countByTypeAndTargetId(ReactionType.LIKE, category, id);
+        Long dislikeCount = countByTypeAndTargetId(ReactionType.DISLIKE, category, id);
+        Long commentCount = countByTypeAndTargetId(ReactionType.COMMENT, category, id);
+        reactionCountMap.put(ReactionType.LIKE, likeCount);
+        reactionCountMap.put(ReactionType.DISLIKE, dislikeCount);
+        reactionCountMap.put(ReactionType.COMMENT, commentCount);
+
+        return reactionCountMap;
+    }
+    public List<? extends ReactionBaseDocument> findByUserIdAndTypeAndTargetId(String userId, ReactionBaseDocument.ReactionType type, ReactionCategory category, String targetId) {
+        Assert.notNull(type, "type must not be null");
+        Assert.notNull(category, "category must not be null");
+
+        return switch (category) {
+            case POST -> postReactionRepo.findByUserIdAndPostIdAndType(userId, targetId, type);
+            case PUBLICATION -> publicationReactionRepo.findByUserIdAndPublicationIdAndType(userId, targetId, type);
+            case EVENT -> eventReactionRepo.findByUserIdAndEventIdAndType(userId, targetId, type);
+            case QUOTE -> quoteReactionRepo.findByUserIdAndQuoteIdAndType(userId, targetId, type);
         };
     }
 
@@ -129,14 +184,21 @@ public class ReactionService {
         
         switch (category) {
             case POST:
-                PostReaction existingPost = postReactionRepo.findById(id)
+                PostReaction existing = postReactionRepo.findById(id)
                         .orElseThrow(() -> new IllegalArgumentException("PostReaction not found: " + id));
-                if (!(updated instanceof PostReaction toSavePost)) {
+                if (!(updated instanceof PostReaction toSave)) {
                     throw new IllegalArgumentException("Expected PostReaction for category POST");
                 }
+                if(existing.getType() != ReactionType.COMMENT && toSave.getType() != ReactionType.COMMENT){
                 // preserve id and update fields (simple strategy: copy allowed fields)
-                toSavePost.setId(existingPost.getId());
-                return postReactionRepo.save(toSavePost);
+                    toSave.setId(existing.getId());
+                    return postReactionRepo.save(toSave);
+                } else if(existing.getType() == toSave.getType()) {
+                    toSave.setId(existing.getId());
+                    return postReactionRepo.save(toSave);
+                } else {
+                    throw new RuntimeException("Reaction type mismatch");
+                }
 
             case PUBLICATION:
                 PublicationReaction existingPub = publicationReactionRepo.findById(id)
@@ -144,8 +206,16 @@ public class ReactionService {
                 if (!(updated instanceof PublicationReaction toSavePub)) {
                     throw new IllegalArgumentException("Expected PublicationReaction for category PUBLICATION");
                 }
-                toSavePub.setId(existingPub.getId());
-                return publicationReactionRepo.save(toSavePub);
+                if(existingPub.getType() != ReactionType.COMMENT && toSavePub.getType() != ReactionType.COMMENT){
+                    // preserve id and update fields (simple strategy: copy allowed fields)
+                        toSavePub.setId(existingPub.getId());
+                        return publicationReactionRepo.save(toSavePub);
+                } else if(existingPub.getType() == toSavePub.getType()) {
+                        toSavePub.setId(existingPub.getId());
+                        return publicationReactionRepo.save(toSavePub);
+                } else {
+                        throw new RuntimeException("Reaction type mismatch");
+                }
 
             case EVENT:
                 EventReaction existingEvent = eventReactionRepo.findById(id)
@@ -153,8 +223,16 @@ public class ReactionService {
                 if (!(updated instanceof EventReaction toSaveEvent)) {
                     throw new IllegalArgumentException("Expected EventReaction for category EVENT");
                 }
-                toSaveEvent.setId(existingEvent.getId());
-                return eventReactionRepo.save(toSaveEvent);
+                if(existingEvent.getType() != ReactionType.COMMENT && toSaveEvent.getType() != ReactionType.COMMENT){
+                    // preserve id and update fields (simple strategy: copy allowed fields)
+                        toSaveEvent.setId(existingEvent.getId());
+                        return eventReactionRepo.save(toSaveEvent);
+                    } else if(existingEvent.getType() == toSaveEvent.getType()) {
+                        toSaveEvent.setId(existingEvent.getId());
+                        return eventReactionRepo.save(toSaveEvent);
+                    } else {
+                        throw new RuntimeException("Reaction type mismatch");
+                    }
 
             case QUOTE:
                 QuoteReaction existingQuote = quoteReactionRepo.findById(id)
@@ -162,8 +240,16 @@ public class ReactionService {
                 if (!(updated instanceof QuoteReaction toSaveQuote)) {
                     throw new IllegalArgumentException("Expected QuoteReaction for category QUOTE");
                 }
-                toSaveQuote.setId(existingQuote.getId());
-                return quoteReactionRepo.save(toSaveQuote);
+                if(existingQuote.getType() != ReactionType.COMMENT && toSaveQuote.getType() != ReactionType.COMMENT){
+                    // preserve id and update fields (simple strategy: copy allowed fields)
+                        toSaveQuote.setId(existingQuote.getId());
+                        return quoteReactionRepo.save(toSaveQuote);
+                    } else if(existingQuote.getType() == toSaveQuote.getType()) {
+                        toSaveQuote.setId(existingQuote.getId());
+                        return quoteReactionRepo.save(toSaveQuote);
+                    } else {
+                        throw new RuntimeException("Reaction type mismatch");
+                    }
 
             default:
                 throw new IllegalArgumentException("Unsupported reaction category: " + category);
@@ -194,6 +280,31 @@ public class ReactionService {
                 throw new IllegalArgumentException("Unsupported reaction category: " + category);
         }
     }
+    public void deleteReactionByUserAndTargetAndLikeOrDislike(ReactionCategory category, String targetId, ReactionType type) {
+        if(type != ReactionType.LIKE && type != ReactionType.DISLIKE){
+            throw new IllegalArgumentException("Unsupported reaction type");
+        }
+        Assert.notNull(category, "category must not be null");
+
+        String userId = authService.getCurrentUser().getId();
+
+        switch (category) {
+            case POST:
+                postReactionRepo.deleteByPostIdAndUserIdAndType(targetId, userId, type);;
+                return;
+            case PUBLICATION:
+                publicationReactionRepo.deleteByPublicationIdAndUserIdAndType(targetId, userId, type);;
+                return;
+            case EVENT:
+                eventReactionRepo.deleteByEventIdAndUserIdAndType(targetId, userId, type);;
+                return;
+            case QUOTE:
+                quoteReactionRepo.deleteByQuoteIdAndUserIdAndType(targetId, userId, type);;
+                return;
+            default:
+                throw new IllegalArgumentException("Unsupported reaction category: " + category);
+        }
+    }
 
     // -----------------------
     // Helpers
@@ -209,4 +320,5 @@ public class ReactionService {
         if (reaction instanceof QuoteReaction) return ReactionCategory.QUOTE;
         throw new IllegalArgumentException("Unable to determine ReactionCategory from instance: " + reaction.getClass().getName());
     }
+
 }

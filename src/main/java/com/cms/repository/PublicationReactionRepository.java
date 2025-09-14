@@ -1,8 +1,9 @@
 package com.cms.repository;
 
-import com.cms.model.EventReaction;
 import com.cms.model.PublicationReaction;
 import com.cms.model.ReactionBaseDocument;
+import com.cms.model.ReactionBaseDocument.ReactionType;
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
@@ -12,6 +13,8 @@ public interface PublicationReactionRepository extends MongoRepository<Publicati
     List<PublicationReaction> findByPublicationIdAndType(String publicationId, ReactionBaseDocument.ReactionType type);
     List<PublicationReaction> findByUserId(String userId);
     List<PublicationReaction> findByUserIdAndPublicationIdAndType(String userId, String publicationId, ReactionBaseDocument.ReactionType type);
+    List<PublicationReaction> findByTypeNotAndUserIdAndPublicationId(ReactionBaseDocument.ReactionType type, String userId, String publicationId);
     long countByUserIdAndPublicationIdAndType(String userId, String publicationId, ReactionBaseDocument.ReactionType type);
-    long countByPublicationIdAndType(String publicationId, String type);
+    long countByPublicationIdAndType(String publicationId, ReactionType type);
+    void deleteByPublicationIdAndUserIdAndType(String publicationId, String userId, ReactionType type);
 }
