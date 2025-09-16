@@ -15,7 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 public class Post extends BaseDocument{
     @Id
-    private String Id;
+    private String id;
 
     @NotNull
     private PostType type;
@@ -24,7 +24,11 @@ public class Post extends BaseDocument{
 
     private String resourceUrl; //image or video
 
+    // whether the media is public or requires auth (applies to media/text visibility)
+    @NotNull
+    private Boolean isPublic = Boolean.FALSE;
+
     public enum PostType{
-        MEDIA, TEXT
+        IMAGE, VIDEO, TEXT
     }
 }

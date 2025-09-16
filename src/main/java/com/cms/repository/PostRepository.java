@@ -11,6 +11,7 @@ import java.time.Instant;
 @Repository
 public interface PostRepository extends MongoRepository<Post, String> {
     Page<Post> findAllByOrderByUpdatedAt(Pageable pageable);
+    Page<Post> findAllByType(Post.PostType type, Pageable pageable);
     long countByType(Post.PostType type);
     long countById(String id);
     long countByUpdatedAtBetween(Instant start, Instant end);

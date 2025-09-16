@@ -33,6 +33,19 @@ public class PostController {
         PageResponse<Post> pageResp = postService.postPageResponse(page, limit);
         return ResponseEntity.ok(ApiResponse.success(pageResp));
     }
+    /**
+     * List posts (paginated) for specific type
+     * GET /posts/{type}?page=1&limit=10
+     */
+    @GetMapping("/{type}")
+    public ResponseEntity<ApiResponse<PageResponse<Post>>> listPostsByType(
+            @PathVariable("type") Post.PostType type,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        PageResponse<Post> pageResp = postService.postPageResponse(page, limit, type);
+        return ResponseEntity.ok(ApiResponse.success(pageResp));
+    }
 
     /**
      * Get post by id

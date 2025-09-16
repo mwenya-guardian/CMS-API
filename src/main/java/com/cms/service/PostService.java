@@ -33,6 +33,11 @@ public class PostService {
         return new PageResponse<>(post.getContent(), post.getNumber(), post.getSize(), post.getTotalPages());
     }
 
+    public PageResponse<Post> postPageResponse(int page, int limit, Post.PostType type){
+        Pageable pageable = PageRequest.of(page - 1, limit, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        Page<Post> post = postRepository.findAllByType(type, pageable);
+        return new PageResponse<>(post.getContent(), post.getNumber(), post.getSize(), post.getTotalPages());
+    }
 
     /**
      * Create a post: saves file via FileService.uploadImage and persists Post with resourceUrl (relative path).
@@ -49,9 +54,10 @@ public class PostService {
         FileUploadResponse fileUploadResponse = fileService.uploadImage(file, isPublic);
 
         Post post = new Post();
-        post.setType(Post.PostType.MEDIA);
+        post.setType(Post.PostType.IMAGE);
         post.setCaption(caption);
         post.setResourceUrl(fileUploadResponse.getUrl()); // store url like private/photos/2025/uuid.jpg
+        post.setIsPublic(isPublic);
         return postRepository.save(post);
     }
 
@@ -66,9 +72,10 @@ public class PostService {
         FileUploadResponse fileUploadResponse = fileService.uploadVideo(file, isPublic);
 
         Post post = new Post();
-        post.setType(Post.PostType.MEDIA);
+        post.setType(Post.PostType.VIDEO);
         post.setCaption(caption);
         post.setResourceUrl(fileUploadResponse.getUrl()); // store relative path like protected/photos/2025/uuid.jpg
+        post.setIsPublic(isPublic);
         return postRepository.save(post);
     }
 
@@ -76,6 +83,7 @@ public class PostService {
         Post post = new Post();
         post.setType(Post.PostType.TEXT);
         post.setCaption(caption);
+        post.setIsPublic(Boolean.TRUE.equals(isPublic));
         return postRepository.save(post);
     }
 
