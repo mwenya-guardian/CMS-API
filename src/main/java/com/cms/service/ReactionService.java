@@ -133,6 +133,17 @@ public class ReactionService {
             case QUOTE -> quoteReactionRepo.findByQuoteIdAndType(targetId, type);
         };
     }
+    public List<? extends ReactionBaseDocument> findByTypeAndUserId(ReactionBaseDocument.ReactionType type, ReactionCategory category, String userId) {
+        Assert.notNull(type, "type must not be null");
+        Assert.notNull(category, "category must not be null");
+
+        return switch (category) {
+            case POST -> postReactionRepo.findByUserIdAndType(userId, type);
+            case PUBLICATION -> publicationReactionRepo.findByUserIdAndType(userId, type);
+            case EVENT -> eventReactionRepo.findByUserIdAndType(userId, type);
+            case QUOTE -> quoteReactionRepo.findByUserIdAndType(userId, type);
+        };
+    }
     public long countByTypeAndTargetId(ReactionBaseDocument.ReactionType type, ReactionCategory category, String id) {
         Assert.notNull(type, "type must not be null");
         Assert.notNull(category, "category must not be null");

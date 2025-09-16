@@ -30,20 +30,33 @@ public class PostController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        PageResponse<Post> pageResp = postService.postPageResponse(page, limit);
+        PageResponse<Post> pageResp = postService.getPageResponse(page, limit);
         return ResponseEntity.ok(ApiResponse.success(pageResp));
     }
     /**
      * List posts (paginated) for specific type
-     * GET /posts/{type}?page=1&limit=10
+     * GET /posts/type/{type}?page=1&limit=10
      */
-    @GetMapping("/{type}")
+    @GetMapping("type/{type}")
     public ResponseEntity<ApiResponse<PageResponse<Post>>> listPostsByType(
             @PathVariable("type") Post.PostType type,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        PageResponse<Post> pageResp = postService.postPageResponse(page, limit, type);
+        PageResponse<Post> pageResp = postService.getPageResponseByType(page, limit, type);
+        return ResponseEntity.ok(ApiResponse.success(pageResp));
+    }
+    /**
+     * List posts (paginated) for specific reaction
+     * GET /posts/reaction?page=1&limit=10
+     */
+    @GetMapping("reaction/like/me")
+    public ResponseEntity<ApiResponse<PageResponse<Post>>> listPostsByTypeForUser(
+            // @PathVariable("type") Post.PostType type,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        PageResponse<Post> pageResp = postService.getAllLikedPostByUser(page, limit);
         return ResponseEntity.ok(ApiResponse.success(pageResp));
     }
 

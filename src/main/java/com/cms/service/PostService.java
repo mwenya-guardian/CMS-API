@@ -4,7 +4,11 @@ import com.cms.dto.response.FileUploadResponse;
 import com.cms.dto.response.PageResponse;
 import com.cms.exception.WrongFileTypeException;
 import com.cms.model.Post;
+import com.cms.model.PostReaction;
+import com.cms.model.ReactionBaseDocument.ReactionType;
 import com.cms.repository.PostRepository;
+import com.cms.service.ReactionService.ReactionCategory;
+
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -14,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,19 +26,38 @@ import java.util.Optional;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final ReactionService reactionService;
+    private final AuthService authService;
     private final FileService fileService;
 
 
     public Optional<Post> getById(String id) {
         return postRepository.findById(id);
     }
-    public PageResponse<Post> postPageResponse(int page, int limit){
+    public Page<Post> getAllByIdList(List<String> ids, int page, int limit) {
+        Pageable pageable = PageRequest.of(page - 1, limit, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        return postRepository.findAllById(ids, pageable);
+    }
+    public PageResponse<Post> getAllLikedPostByUser(int page, int limit){
+        String userId = authService.getCurrentUser().getId();
+        List<String> idList= reactionService
+            .findByTypeAndUserId(ReactionType.LIKE, ReactionCategory.POST, userId)
+            .stream().map((reaction)->{
+                if(reaction instanceof PostReaction){
+                    return ((PostReaction)reaction).getPost().getId();
+                }
+                return "";
+            }).toList();
+        Page<Post> post = getAllByIdList(idList, page, limit);
+        return new PageResponse<>(post.getContent(), post.getNumber(), post.getSize(), post.getTotalPages());
+    }
+    public PageResponse<Post> getPageResponse(int page, int limit){
         Pageable pageable = PageRequest.of(page - 1, limit, Sort.by(Sort.Direction.DESC, "updatedAt"));
         Page<Post> post = postRepository.findAll(pageable);
         return new PageResponse<>(post.getContent(), post.getNumber(), post.getSize(), post.getTotalPages());
     }
 
-    public PageResponse<Post> postPageResponse(int page, int limit, Post.PostType type){
+    public PageResponse<Post> getPageResponseByType(int page, int limit, Post.PostType type){
         Pageable pageable = PageRequest.of(page - 1, limit, Sort.by(Sort.Direction.DESC, "updatedAt"));
         Page<Post> post = postRepository.findAllByType(type, pageable);
         return new PageResponse<>(post.getContent(), post.getNumber(), post.getSize(), post.getTotalPages());

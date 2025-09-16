@@ -1,6 +1,5 @@
 package com.cms.controller;
 
-import com.cms.service.FileService;
 import com.cms.service.PostService;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
@@ -73,6 +72,24 @@ public class MediaController {
                 .header("X-Accel-Redirect", internal)
                 .header(HttpHeaders.CONTENT_TYPE, "video/mp4")
                 .build();
+    }
+
+    @GetMapping("/images/{postId}")
+    public ResponseEntity<?> getImage(
+            @PathVariable String postId
+    ) throws Exception {
+        // Load relative stored path from Post
+        Resource resource = postService.loadMediaForPost(postId);
+        long contentLength = resource.contentLength();
+
+        // Determine content type
+        MediaType mediaType = MediaTypeFactory.getMediaType(resource).orElse(MediaType.APPLICATION_OCTET_STREAM);
+        
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .contentLength(contentLength)
+                .header(HttpHeaders.CACHE_CONTROL, "private, max-age=3600") // Cache for 1 hour
+                .body(new InputStreamResource(resource.getInputStream()));
     }
 
 }

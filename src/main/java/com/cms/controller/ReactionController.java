@@ -104,7 +104,7 @@ public class ReactionController {
         }
     }
     @GetMapping("/{category}/{type}/{id}/me")
-    public ResponseEntity<ApiResponse<List<ReactionResponse>>> getByTypeAndUSerAndTarget(
+    public ResponseEntity<ApiResponse<List<ReactionResponse>>> getByTypeAndUserAndTarget(
             @PathVariable("category") ReactionService.ReactionCategory category,
             @PathVariable("type") ReactionBaseDocument.ReactionType type,
             // @PathVariable("user") String userId,
@@ -113,6 +113,26 @@ public class ReactionController {
         try {
             List<? extends ReactionBaseDocument> found = reactionService
                     .findByUserIdAndTypeAndTargetId(authService.getCurrentUser().getId(), type, category, targetId);
+            if (found == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("Reaction null found"));
+            }
+            return ResponseEntity.ok(ApiResponse.success(found.stream().map(r -> reactionMappers.mapToResponse(r, category)).toList()));
+        } catch (IllegalArgumentException iae) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(iae.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to fetch reaction"));
+        }
+    }
+    @GetMapping("/{category}/{type}/me")
+    public ResponseEntity<ApiResponse<List<ReactionResponse>>> getByTypeAndUser(
+            @PathVariable("category") ReactionService.ReactionCategory category,
+            @PathVariable("type") ReactionBaseDocument.ReactionType type
+    ) {
+        try {
+            List<? extends ReactionBaseDocument> found = reactionService
+                    .findByTypeAndUserId(type, category, authService.getCurrentUser().getId());
             if (found == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.error("Reaction null found"));

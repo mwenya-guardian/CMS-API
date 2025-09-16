@@ -15,6 +15,7 @@ public interface EventReactionRepository extends MongoRepository<EventReaction, 
     List<EventReaction> findByUserIdAndEventIdAndType(String userId, String eventId, ReactionBaseDocument.ReactionType type);
     List<EventReaction> findByTypeNotAndUserIdAndEventId(ReactionBaseDocument.ReactionType type, String userId, String eventId);
     List<EventReaction> findByEventIdAndType(String eventId, ReactionBaseDocument.ReactionType type);
+    List<EventReaction> findByUserIdAndType(String userId, ReactionBaseDocument.ReactionType type);
     long countByUserIdAndEventIdAndType(String userId, String eventId, ReactionBaseDocument.ReactionType type);
     long countByEventIdAndType(String eventId, ReactionBaseDocument.ReactionType type);
     void deleteByEventIdAndUserIdAndType(String eventId, String userId, ReactionType type);
