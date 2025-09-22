@@ -15,5 +15,4 @@ public class TaskSchedulerPool {
         scheduler.initialize();
         return scheduler;
     }
-
 }

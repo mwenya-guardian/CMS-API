@@ -5,6 +5,8 @@ import com.cms.dto.response.PageResponse;
 import com.cms.dto.response.UserResponse;
 import com.cms.model.User;
 import com.cms.service.UserService;
+
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import com.cms.dto.response.ApiResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -22,7 +25,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<User>>  createUserPublic(@Valid @RequestBody UserRequest request) {
+    public ResponseEntity<ApiResponse<User>>  createUserPublic(@Valid @RequestBody UserRequest request) throws MessagingException, IOException {
         User createdUser = userService.createPublic(request);
         return ResponseEntity.ok(ApiResponse.success(createdUser));
     }
@@ -59,6 +62,13 @@ public class UserController {
         User updatedUser = userService.update(id, request);
         return ResponseEntity.ok(ApiResponse.success(updatedUser));
     }
+
+    @PutMapping("/verify")
+    public ResponseEntity<ApiResponse<Boolean>> verifyUserCode(@RequestParam String token, @RequestParam String email){
+        return ResponseEntity.ok(
+            ApiResponse.success(userService.verifyUser(email, token))
+        );
+    } 
 
     // Delete user
     @DeleteMapping("/{id}")

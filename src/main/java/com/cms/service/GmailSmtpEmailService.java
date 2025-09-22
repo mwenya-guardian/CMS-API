@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 
+import com.cms.config.TaskSchedulerPool;
 import com.cms.dto.EmailAttachment;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -24,6 +25,7 @@ public class GmailSmtpEmailService implements EmailService {
 
     private final JavaMailSender mailSender;
     private final String fromAddress;
+    private TaskSchedulerPool taskSchedulerPool;
 
     public GmailSmtpEmailService(JavaMailSender mailSender,
                                  @Value("${spring.mail.username}") String fromAddress) {

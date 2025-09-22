@@ -66,6 +66,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/giving/**").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/users/register").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/users/verify").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/verification/resend").permitAll()
                         // Newsletter subscription
                         .requestMatchers(HttpMethod.POST, "/newsletter-subscribers/subscribe").permitAll()
                         .requestMatchers(HttpMethod.GET, "/newsletter-subscribers/verify").permitAll()

@@ -12,15 +12,16 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Random;
-import java.util.UUID;
 
 @Service
 @AllArgsConstructor
 public class NewsletterSubscriberService {
 
     private final NewsletterSubscriberRepository repository;
+    private final EmailVerificationService emailVerificationService;
     private final EmailService emailService;
 
     /**
@@ -89,10 +90,11 @@ public class NewsletterSubscriberService {
         if (existing.isPresent()) {
             s = existing.get();
             s.setActive(Boolean.TRUE);
-            NewsletterSubscriber savedSubscriber = repository.save(s);
+            repository.save(s);
             if(!existing.get().getVerified()){
-                emailService.sendPlain(normalized, "SDA Bulletin Subscription Verification",
-                        "Verification Code: " + s.getVerificationToken());
+                // emailService.sendPlain(normalized, "SDA Bulletin Subscription Verification",
+                //         "Verification Code: " + s.getVerificationToken());
+                emailVerificationService.sendNewsletterVerificationCode(email);
             }
 
         } else {
@@ -103,11 +105,15 @@ public class NewsletterSubscriberService {
             s.setVerificationToken(generateToken());
 
             NewsletterSubscriber savedSubscriber = repository.save(s);
-            emailService.sendPlain(normalized, "SDA Bulletin Subscription Verification",
-                    "Verification Code: " + savedSubscriber.getVerificationToken());
+            // emailService.sendPlain(normalized, "SDA Bulletin Subscription Verification",
+            //         "Verification Code: " + savedSubscriber.getVerificationToken());
+
+            emailVerificationService.sendNewsletterVerificationCode(email);
         }
         return mapEntityToResponse(s);
     }
+    
+ 
     public NewsletterSubscriberResponse unsubscribe(String email) {
         String normalized = email.trim().toLowerCase();
         Optional<NewsletterSubscriber> existing = repository.findByEmail(normalized);
@@ -122,11 +128,13 @@ public class NewsletterSubscriberService {
      */
     public boolean verifyToken(String email, String token ) {
         if (token == null || token.isBlank()) return false;
-        NewsletterSubscriber subscriber = repository.findByEmail(email).orElseThrow();
+        NewsletterSubscriber subscriber = repository.findByEmail(email).orElseThrow(
+            () -> new NoSuchElementException("Email not registered")
+        );
         if(subscriber.getVerified())
             return true;
 
-        if (token.equals(subscriber.getVerificationToken())) {
+        if (emailVerificationService.verifyNewsletterCode(email, token)) {
             subscriber.setVerified(Boolean.TRUE);
             subscriber.setVerificationToken(null);
             repository.save(subscriber);
@@ -143,7 +151,6 @@ public class NewsletterSubscriberService {
         if (request.getEmail() != null) existing.setEmail(request.getEmail().trim().toLowerCase());
         if (request.getActive() != null) existing.setActive(request.getActive());
         if (request.getVerified() != null) existing.setVerified(request.getVerified());
-        if (request.getVerificationToken() != null) existing.setVerificationToken(request.getVerificationToken());
         NewsletterSubscriber savedSubscriber = repository.save(existing);
         return mapEntityToResponse(savedSubscriber);
     }

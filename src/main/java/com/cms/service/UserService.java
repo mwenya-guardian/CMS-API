@@ -9,7 +9,8 @@ import com.cms.exception.ResourceNotFoundException;
 import com.cms.model.User;
 import com.cms.repository.UserRepository;
 
-import com.cms.repository.UserVerificationRepository;
+import io.jsonwebtoken.lang.Assert;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,9 +18,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -27,6 +28,7 @@ public class UserService {
 
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailVerificationService emailVerificationService;
 
 
     
@@ -82,13 +84,19 @@ public class UserService {
     }
 
     @Transactional
-    public User createPublic(UserRequest request) {
+    public User createPublic(UserRequest request) throws MessagingException, IOException{
         // basic validation (controller layer already validates jakarta constraints)
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new BadRequestException("Email is required");
         }
-        if (repository.existsByEmail(request.getEmail())) {
+        User userExisting = repository.findByEmail(request.getEmail().trim().toLowerCase()).orElse(null);
+        if (userExisting  != null) {
+            if(!userExisting.getActive()){
+                emailVerificationService.sendUserVerificationCode(userExisting.getEmail());
+                throw new DuplicateResourceException("Email already exists, but inactive");
+            }
             throw new DuplicateResourceException("Email already in use");
+            // return userExisting;
         }
 
         User u = new User();
@@ -99,11 +107,14 @@ public class UserService {
         u.setPassword(passwordEncoder.encode(request.getPassword()));
         u.setDob(request.getDob());
         u.setRole(User.UserRole.USER);
+        u.setActive(false); // User starts as inactive until email verification
 
+        User savedUser = repository.save(u);
+        emailVerificationService.sendUserVerificationCode(u.getEmail());
         // createdAt and createdBy handled by BaseDocument / auditing annotations
-        return repository.save(u);
+        return savedUser;
     }
-
+    
     
     @Transactional
     public User update(String id, UserRequest request) {
@@ -167,5 +178,21 @@ public class UserService {
     }
     private UserResponse mapUserToUserResponse(User user){
         return new UserResponse(user.getEmail(), user.getFirstname(), user.getLastname(), user.getDob(),user.getRole());
+    }
+
+    @Transactional
+    public boolean verifyUser(String email, String code){
+        String normalizedEmail = email.trim().toLowerCase();
+        User existing = repository.findByEmail(normalizedEmail).orElse(null);
+        if(existing == null){
+            throw new ResourceNotFoundException("Email is not registered as a user");
+        }
+        if(emailVerificationService.verifyUserCode(normalizedEmail, code)){
+            existing.setActive(true);
+            repository.save(existing);
+            return true;
+        }
+        return false;
+
     }
 }

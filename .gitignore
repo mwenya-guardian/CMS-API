@@ -16,6 +16,7 @@
 *.ear
 
 /uploads
+/src/main/resources/keys
 # Maven
 target/
 !.mvn/wrapper/maven-wrapper.jar

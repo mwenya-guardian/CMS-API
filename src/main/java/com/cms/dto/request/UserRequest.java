@@ -23,11 +23,11 @@ public class UserRequest {
     private String email;
 
     @NotBlank(message = "Name is required")
-    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    @Size(min = 1, max = 100, message = "Name must be between 2 and 100 characters")
     private String lastname;
 
     @NotBlank(message = "Name is required")
-    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    @Size(min = 1, max = 100, message = "Name must be between 2 and 100 characters")
     private String firstname;
 
     @NotBlank(message = "Password is required")

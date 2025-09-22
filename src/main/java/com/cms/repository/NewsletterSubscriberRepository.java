@@ -14,4 +14,5 @@ public interface NewsletterSubscriberRepository extends MongoRepository<Newslett
     List<NewsletterSubscriber> findByActiveTrueAndVerifiedTrue();
     Page<NewsletterSubscriber> findByActiveTrueAndVerifiedTrue(Pageable page);
     Optional<NewsletterSubscriber> findByEmail(String email);
+    boolean existsByEmail(String email);
 }
