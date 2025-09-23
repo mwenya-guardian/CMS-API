@@ -15,8 +15,8 @@ A comprehensive Spring Boot backend for a Content Management System with JWT aut
 
 ## Tech Stack
 
-- **Java 17**
-- **Spring Boot 3.2.1**
+- **Java 21**
+- **Spring Boot 3.5.6**
 - **Spring Security** (JWT Authentication)
 - **Spring Data MongoDB**
 - **iText PDF** (PDF generation)
