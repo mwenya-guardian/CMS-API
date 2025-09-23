@@ -11,7 +11,6 @@ import com.cms.service.FileService;
 import com.cms.service.PublicationService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -146,5 +145,23 @@ public class PublicationController {
     public ResponseEntity<ApiResponse<FileUploadResponse>> uploadImage(@RequestParam("image") MultipartFile file) throws IOException {
         FileUploadResponse response = publicationService.uploadImage(file, true);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+    
+    @GetMapping("/count")
+    public ResponseEntity<ApiResponse<Long>> getTotalCount() {
+        long count = publicationService.getTotalCount();
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+    
+    @GetMapping("/count/year/{year}")
+    public ResponseEntity<ApiResponse<Long>> getCountByYear(@PathVariable int year) {
+        long count = publicationService.getCountByYear(year);
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+    
+    @GetMapping("/count/featured")
+    public ResponseEntity<ApiResponse<Long>> getFeaturedCount() {
+        long count = publicationService.getFeaturedCount();
+        return ResponseEntity.ok(ApiResponse.success(count));
     }
 }

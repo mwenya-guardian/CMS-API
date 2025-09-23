@@ -37,4 +37,9 @@ public interface PublicationRepository extends MongoRepository<Publication, Stri
 
     long countByDate(LocalDateTime year);
     long countByUpdatedAtBetween(Instant start, Instant end);
+    
+    // Count methods for dashboard
+    long countByDateBetween(LocalDateTime start, LocalDateTime end);
+    long countByFeatured(Boolean featured);
+    long count();
 }

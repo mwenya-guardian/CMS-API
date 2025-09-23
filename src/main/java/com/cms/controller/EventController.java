@@ -115,4 +115,28 @@ public class EventController {
         FileUploadResponse response = eventService.uploadImage(file, true);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+    
+    @GetMapping("/count")
+    public ResponseEntity<ApiResponse<Long>> getTotalCount() {
+        long count = eventService.getTotalCount();
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+    
+    @GetMapping("/count/year/{year}")
+    public ResponseEntity<ApiResponse<Long>> getCountByYear(@PathVariable int year) {
+        long count = eventService.getCountByYear(year);
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+    
+    @GetMapping("/count/featured")
+    public ResponseEntity<ApiResponse<Long>> getFeaturedCount() {
+        long count = eventService.getFeaturedCount();
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+    
+    @GetMapping("/count/upcoming")
+    public ResponseEntity<ApiResponse<Long>> getUpcomingCount() {
+        long count = eventService.getUpcomingCount();
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
 }

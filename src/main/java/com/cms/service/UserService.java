@@ -177,7 +177,7 @@ public class UserService {
         });
     }
     private UserResponse mapUserToUserResponse(User user){
-        return new UserResponse(user.getEmail(), user.getFirstname(), user.getLastname(), user.getDob(),user.getRole());
+        return new UserResponse(user.getEmail(), user.getFirstname(), user.getLastname(), user.getDob(),user.getRole(), user.getLastLogin());
     }
 
     @Transactional

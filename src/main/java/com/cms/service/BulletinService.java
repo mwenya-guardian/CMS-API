@@ -1,12 +1,12 @@
 package com.cms.service;
 
 import com.cms.dto.request.BulletinRequest;
+import com.cms.dto.response.BulletinSummary;
 import com.cms.dto.response.PageResponse;
 import com.cms.model.Bulletin;
 import com.cms.model.Bulletin.PublicationStatus;
 import com.cms.model.User;
 import com.cms.repository.BulletinRepository;
-import com.cms.security.UserPrincipal;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -194,5 +194,21 @@ public class BulletinService {
                 .peek((savedBulletin)-> savedBulletin.setStatus(PublicationStatus.DRAFT))
                 .toList();
         bulletinRepository.saveAll(updated);
+    }
+
+    /**
+     * Get published and scheduled bulletin summaries (ID and title only)
+     * @return List of BulletinSummary containing only ID and title
+     */
+    public List<BulletinSummary> getPublishedBulletinSummaries() {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("status").in(PublicationStatus.PUBLISHED, PublicationStatus.SCHEDULED));
+        query.fields().include("id", "title");
+        query.with(Sort.by(Sort.Direction.DESC, "bulletinDate"));
+        
+        List<Bulletin> bulletins = mongoTemplate.find(query, Bulletin.class);
+        return bulletins.stream()
+                .map(bulletin -> new BulletinSummary(bulletin.getId(), bulletin.getTitle()))
+                .toList();
     }
 }

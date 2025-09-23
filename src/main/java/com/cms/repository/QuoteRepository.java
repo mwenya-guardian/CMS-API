@@ -34,4 +34,9 @@ public interface QuoteRepository extends MongoRepository<Quote, String> {
     List<Quote> findByAuthor(String author);
 
     long countByUpdatedAtBetween(Instant start, Instant end);
+    
+    // Count methods for dashboard
+    long countByCreatedAtBetween(Instant start, Instant end);
+    long countByFeatured(Boolean featured);
+    long count();
 }

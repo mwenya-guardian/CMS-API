@@ -6,9 +6,6 @@ import com.cms.dto.response.PageResponse;
 import com.cms.model.Publication;
 import com.cms.repository.PublicationRepository;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -148,5 +145,20 @@ public class PublicationService {
     }
     public FileUploadResponse uploadImage(MultipartFile file, Boolean isPublic) throws IOException {
         return fileService.uploadImage(file, isPublic);
+    }
+    
+    // Count methods for dashboard
+    public long getTotalCount() {
+        return publicationRepository.count();
+    }
+    
+    public long getCountByYear(int year) {
+        LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0);
+        LocalDateTime startOfNextYear = LocalDateTime.of(year + 1, 1, 1, 0, 0);
+        return publicationRepository.countByDateBetween(startOfYear, startOfNextYear);
+    }
+    
+    public long getFeaturedCount() {
+        return publicationRepository.countByFeatured(true);
     }
 }

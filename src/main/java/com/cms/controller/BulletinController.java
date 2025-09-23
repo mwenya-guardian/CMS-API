@@ -2,6 +2,7 @@ package com.cms.controller;
 
 import com.cms.dto.request.BulletinRequest;
 import com.cms.dto.response.ApiResponse;
+import com.cms.dto.response.BulletinSummary;
 import com.cms.dto.response.PageResponse;
 import com.cms.model.Bulletin;
 import com.cms.model.Bulletin.PublicationStatus;
@@ -57,6 +58,12 @@ public class BulletinController {
         Bulletin b = bulletinService.getBulletinById(id)
                 .orElseThrow(() -> new RuntimeException("bulletin not found"));
         return ResponseEntity.ok(ApiResponse.success(b));
+    }
+
+    @GetMapping("/published-summaries")
+    public ResponseEntity<ApiResponse<List<BulletinSummary>>> getPublishedBulletinSummaries() {
+        List<BulletinSummary> summaries = bulletinService.getPublishedBulletinSummaries();
+        return ResponseEntity.ok(ApiResponse.success(summaries));
     }
 
     @PostMapping

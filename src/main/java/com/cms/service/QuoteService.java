@@ -6,7 +6,6 @@ import com.cms.dto.response.PageResponse;
 import com.cms.model.Quote;
 import com.cms.repository.QuoteRepository;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -18,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -140,6 +140,23 @@ public class QuoteService {
     }
     public FileUploadResponse uploadImage(MultipartFile file, Boolean isPublic) throws IOException {
         return fileService.uploadImage(file, isPublic);
+    }
+    
+    // Count methods for dashboard
+    public long getTotalCount() {
+        return quoteRepository.count();
+    }
+    
+    public long getCountByYear(int year) {
+        LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0);
+        LocalDateTime startOfNextYear = LocalDateTime.of(year + 1, 1, 1, 0, 0);
+        Instant startInstant = startOfYear.atZone(java.time.ZoneId.systemDefault()).toInstant();
+        Instant endInstant = startOfNextYear.atZone(java.time.ZoneId.systemDefault()).toInstant();
+        return quoteRepository.countByCreatedAtBetween(startInstant, endInstant);
+    }
+    
+    public long getFeaturedCount() {
+        return quoteRepository.countByFeatured(true);
     }
         
 }

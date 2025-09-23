@@ -1,23 +1,18 @@
 package com.cms.service;
 
 import com.cms.dto.request.EventRequest;
-import com.cms.dto.response.ApiResponse;
 import com.cms.dto.response.FileUploadResponse;
 import com.cms.dto.response.PageResponse;
 import com.cms.model.Event;
 import com.cms.repository.EventRepository;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -148,5 +143,24 @@ public class EventService {
     }
     public FileUploadResponse uploadImage(MultipartFile file, Boolean isPublic) throws IOException {
         return fileService.uploadImage(file, isPublic);
+    }
+    
+    // Count methods for dashboard
+    public long getTotalCount() {
+        return eventRepository.count();
+    }
+    
+    public long getCountByYear(int year) {
+        LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0);
+        LocalDateTime startOfNextYear = LocalDateTime.of(year + 1, 1, 1, 0, 0);
+        return eventRepository.countByStartDateBetween(startOfYear, startOfNextYear);
+    }
+    
+    public long getFeaturedCount() {
+        return eventRepository.countByFeatured(true);
+    }
+    
+    public long getUpcomingCount() {
+        return eventRepository.countByStartDateAfter(LocalDateTime.now());
     }
 }

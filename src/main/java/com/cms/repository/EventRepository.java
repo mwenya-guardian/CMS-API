@@ -35,4 +35,10 @@ public interface EventRepository extends MongoRepository<Event, String> {
     long countByUpdatedAtBetween(Instant start, Instant end);
     long countByCategory(Event.EventCategory category);
     long countByStartDate(LocalDateTime year);
+    
+    // Count methods for dashboard
+    long countByStartDateBetween(LocalDateTime start, LocalDateTime end);
+    long countByFeatured(Boolean featured);
+    long count();
+    long countByStartDateAfter(LocalDateTime date);
 }
