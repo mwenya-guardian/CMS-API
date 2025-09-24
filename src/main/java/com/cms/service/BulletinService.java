@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -210,5 +211,22 @@ public class BulletinService {
         return bulletins.stream()
                 .map(bulletin -> new BulletinSummary(bulletin.getId(), bulletin.getTitle()))
                 .toList();
+    }
+    
+    // Count methods for dashboard
+    public long getTotalCount() {
+        return bulletinRepository.count();
+    }
+    
+    public long getCountByYear(int year) {
+        LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0);
+        LocalDateTime startOfNextYear = LocalDateTime.of(year + 1, 1, 1, 0, 0);
+        Instant startInstant = startOfYear.atZone(java.time.ZoneId.systemDefault()).toInstant();
+        Instant endInstant = startOfNextYear.atZone(java.time.ZoneId.systemDefault()).toInstant();
+        return bulletinRepository.countByCreatedAtBetween(startInstant, endInstant);
+    }
+    
+    public long getPublishedCount() {
+        return bulletinRepository.countByStatus(PublicationStatus.PUBLISHED);
     }
 }

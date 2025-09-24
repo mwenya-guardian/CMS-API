@@ -11,6 +11,8 @@ import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -167,6 +169,39 @@ public class NewsletterSubscriberService {
         return new NewsletterSubscriberResponse(subscriber.getId(), subscriber.getEmail(),
                 subscriber.getActive(),
                 subscriber.getVerified(), subscriber.getCreatedAt(), subscriber.getUpdatedAt());
+    }
+    
+    // Count methods for dashboard
+    public long getTotalCount() {
+        return repository.count();
+    }
+    
+    public long getCountByYear(int year) {
+        LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0);
+        LocalDateTime startOfNextYear = LocalDateTime.of(year + 1, 1, 1, 0, 0);
+        Instant startInstant = startOfYear.atZone(java.time.ZoneId.systemDefault()).toInstant();
+        Instant endInstant = startOfNextYear.atZone(java.time.ZoneId.systemDefault()).toInstant();
+        return repository.countByCreatedAtBetween(startInstant, endInstant);
+    }
+    
+    public long getActiveCount() {
+        return repository.countByActive(true);
+    }
+    
+    public long getActiveCountByYear(int year) {
+        LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0);
+        LocalDateTime startOfNextYear = LocalDateTime.of(year + 1, 1, 1, 0, 0);
+        Instant startInstant = startOfYear.atZone(java.time.ZoneId.systemDefault()).toInstant();
+        Instant endInstant = startOfNextYear.atZone(java.time.ZoneId.systemDefault()).toInstant();
+        return repository.countByActiveAndCreatedAtBetween(true, startInstant, endInstant);
+    }
+    
+    public long getInactiveCountByYear(int year) {
+        LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0);
+        LocalDateTime startOfNextYear = LocalDateTime.of(year + 1, 1, 1, 0, 0);
+        Instant startInstant = startOfYear.atZone(java.time.ZoneId.systemDefault()).toInstant();
+        Instant endInstant = startOfNextYear.atZone(java.time.ZoneId.systemDefault()).toInstant();
+        return repository.countByActiveAndCreatedAtBetween(false, startInstant, endInstant);
     }
 
 }

@@ -119,6 +119,24 @@ public class BulletinController {
         return ResponseEntity.ok(ApiResponse.success(items));
     }
     
+    @GetMapping("/count")
+    public ResponseEntity<ApiResponse<Long>> getTotalCount() {
+        long count = bulletinService.getTotalCount();
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+    
+    @GetMapping("/count/year/{year}")
+    public ResponseEntity<ApiResponse<Long>> getCountByYear(@PathVariable int year) {
+        long count = bulletinService.getCountByYear(year);
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+    
+    @GetMapping("/count/published")
+    public ResponseEntity<ApiResponse<Long>> getPublishedCount() {
+        long count = bulletinService.getPublishedCount();
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+    
     @GetMapping("/{id}/export/pdf")
     public ResponseEntity<byte[]> exportBulletinToPdf(@PathVariable String id) throws IOException {
         Bulletin bulletin = bulletinService.getBulletinById(id)

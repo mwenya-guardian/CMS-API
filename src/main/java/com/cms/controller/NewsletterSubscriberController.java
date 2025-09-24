@@ -9,7 +9,6 @@ import com.cms.service.NewsletterSubscriberService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -95,5 +94,36 @@ public class NewsletterSubscriberController {
     public ResponseEntity<Void> delete(@PathVariable String id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+    
+    // Count methods for dashboard
+    @GetMapping("/count")
+    public ResponseEntity<ApiResponse<Long>> getTotalCount() {
+        long count = service.getTotalCount();
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+    
+    @GetMapping("/count/year/{year}")
+    public ResponseEntity<ApiResponse<Long>> getCountByYear(@PathVariable int year) {
+        long count = service.getCountByYear(year);
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+    
+    @GetMapping("/count/active")
+    public ResponseEntity<ApiResponse<Long>> getActiveCount() {
+        long count = service.getActiveCount();
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+    
+    @GetMapping("/count/active/year/{year}")
+    public ResponseEntity<ApiResponse<Long>> getActiveCountByYear(@PathVariable int year) {
+        long count = service.getActiveCountByYear(year);
+        return ResponseEntity.ok(ApiResponse.success(count));
+    }
+    
+    @GetMapping("/count/inactive/year/{year}")
+    public ResponseEntity<ApiResponse<Long>> getInactiveCountByYear(@PathVariable int year) {
+        long count = service.getInactiveCountByYear(year);
+        return ResponseEntity.ok(ApiResponse.success(count));
     }
 }
