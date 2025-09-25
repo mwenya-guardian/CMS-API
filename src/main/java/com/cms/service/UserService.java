@@ -1,6 +1,7 @@
 package com.cms.service;
 
 import com.cms.dto.request.UserRequest;
+import com.cms.dto.request.UserUpdateRequest;
 import com.cms.dto.response.PageResponse;
 import com.cms.dto.response.UserResponse;
 import com.cms.exception.BadRequestException;
@@ -117,7 +118,7 @@ public class UserService {
     
     
     @Transactional
-    public User update(String id, UserRequest request) {
+    public User update(String id, UserUpdateRequest request) {
         User existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
 
@@ -135,9 +136,9 @@ public class UserService {
         if (request.getRole() != null) existing.setRole(request.getRole());
 
         // If password present, encode and update; otherwise keep existing
-        if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            existing.setPassword(passwordEncoder.encode(request.getPassword()));
-        }
+        // if (request.getPassword() != null && !request.getPassword().isBlank()) {
+        //     existing.setPassword(passwordEncoder.encode(request.getPassword()));
+        // }
 
         return repository.save(existing);
     }
@@ -177,7 +178,7 @@ public class UserService {
         });
     }
     private UserResponse mapUserToUserResponse(User user){
-        return new UserResponse(user.getEmail(), user.getFirstname(), user.getLastname(), user.getDob(),user.getRole(), user.getLastLogin());
+        return new UserResponse(user.getId(), user.getEmail(), user.getFirstname(), user.getLastname(), user.getDob(),user.getRole(), user.getLastLogin());
     }
 
     @Transactional

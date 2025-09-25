@@ -1,6 +1,7 @@
 package com.cms.controller;
 
 import com.cms.dto.request.UserRequest;
+import com.cms.dto.request.UserUpdateRequest;
 import com.cms.dto.response.PageResponse;
 import com.cms.dto.response.UserResponse;
 import com.cms.model.User;
@@ -57,7 +58,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<User>> updateUser(
             @PathVariable String id,
-            @Valid @RequestBody UserRequest request
+            @Valid @RequestBody UserUpdateRequest request
     ) {
         User updatedUser = userService.update(id, request);
         return ResponseEntity.ok(ApiResponse.success(updatedUser));
