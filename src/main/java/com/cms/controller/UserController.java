@@ -16,7 +16,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequestMapping("users")
@@ -70,6 +69,13 @@ public class UserController {
             ApiResponse.success(userService.verifyUser(email, token))
         );
     } 
+
+    // Get user's full name
+    @GetMapping("/{id}/fullname")
+    public ResponseEntity<ApiResponse<String>> getUserFullName(@PathVariable String id) {
+        String fullName = userService.getFullName(id);
+        return ResponseEntity.ok(ApiResponse.success(fullName));
+    }
 
     // Delete user
     @DeleteMapping("/{id}")

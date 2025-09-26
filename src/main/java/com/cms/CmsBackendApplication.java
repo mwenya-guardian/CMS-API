@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableMongoAuditing
 @EnableScheduling
-//@EnableAsync
+@EnableAsync
 public class CmsBackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(CmsBackendApplication.class, args);

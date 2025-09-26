@@ -4,10 +4,15 @@ import com.cms.client.AiClient;
 import com.cms.model.AnalysisJob;
 import com.cms.dto.request.CommentRequest;
 import com.cms.model.CommentAnalysis;
+import com.cms.model.ReactionBaseDocument;
 import com.cms.repository.AnalysisJobRepository;
 import com.cms.repository.CommentAnalysisRepository;
 import com.cms.dto.request.BulkAnalysisRequest;
 import com.cms.dto.response.BulkAnalysisResponse;
+import com.cms.service.PostService;
+import com.cms.service.PublicationService;
+import com.cms.service.EventService;
+import com.cms.service.QuoteService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -31,44 +36,59 @@ public class AiAnalysisService {
     private final AnalysisJobRepository jobRepo;
     private final TrendService trendService;
     private final ObjectMapper objectMapper = new ObjectMapper();
-
+    private final ReactionService reactionService;
+    private final PostService postService;
+    private final PublicationService publicationService;
+    private final EventService eventService;
+    private final QuoteService quoteService;
     // config
     private final int CHUNK_SIZE = 40;    // tune for token limits
-    private final int PARALLELISM = 3;    // if you do async concurrency
+    private final int PARALLELISM = 3; // if you do async concurrency
+
+    //Get context
+    public String getContext(ReactionService.ReactionCategory entityType, String entityId) {
+        return switch (entityType) {
+            case POST -> postService.getById(entityId).get().getCaption();
+            case PUBLICATION -> publicationService.getPublicationById(entityId).get().getContent();
+            case EVENT -> eventService.getEventById(entityId).get().getDescription();
+            case QUOTE -> quoteService.getQuoteById(entityId).get().getText();
+        };
+    }
 
     public BulkAnalysisResponse submitBulk(@NotNull  BulkAnalysisRequest request, List<CommentRequest> comments) {
         // comments: load from your comment repository by entityType/entityId and since...
         int total = comments.size();
-//        AnalysisJob job = AnalysisJob.builder()
-//                .entityType(request.getEntityType())
-//                .entityId(request.getEntityId())
-//                .submittedAt(Instant.now())
-//                .status(AnalysisJob.AnalysisStatus.PENDING)
-//                .totalComments(total)
-//                .processedComments(0)
-//                .meta(Map.of("chunkSize", CHUNK_SIZE))
-//                .build();
+        AnalysisJob job = AnalysisJob.builder()
+                .entityType(request.getEntityType())
+                .entityId(request.getEntityId())
+                .submittedAt(Instant.now())
+                .status(AnalysisJob.AnalysisStatus.PENDING)
+                .totalComments(total)
+                .processedComments(0)
+                .meta(Map.of("chunkSize", CHUNK_SIZE))
+                .build();
 
-        AnalysisJob job = new AnalysisJob();
-            job.setEntityType(request.getEntityType());
-            job.setEntityId(request.getEntityId());
-            job.setSubmittedAt(Instant.now());
-            job.setStatus(AnalysisJob.AnalysisStatus.PENDING);
-            job.setTotalComments(total);
-            job.setProcessedComments(0);
-            job.setMeta(Map.of("chunkSize", CHUNK_SIZE));
+//        AnalysisJob job = new AnalysisJob();
+//            job.setEntityType(request.getEntityType());
+//            job.setEntityId(request.getEntityId());
+//            job.setSubmittedAt(Instant.now());
+//            job.setStatus(AnalysisJob.AnalysisStatus.PENDING);
+//            job.setTotalComments(total);
+//            job.setProcessedComments(0);
+//            job.setMeta(Map.of("chunkSize", CHUNK_SIZE));
 
 
         job = jobRepo.save(job);
 
         // chunking
         List<List<CommentRequest>> chunks = chunk(comments, CHUNK_SIZE);
+        String context = getContext(request.getEntityType(), request.getEntityId());
 
         // schedule asynchronous processing of each chunk
         AtomicInteger submitted = new AtomicInteger();
         for (List<CommentRequest> chunk : chunks) {
             submitted.incrementAndGet();
-            processChunkAsync(job.getId(), request.getEntityType(), request.getEntityId(), chunk, request.getModes());
+            processChunkAsync(job.getId(), request.getEntityType(), request.getEntityId(), chunk, context);
         }
 
         job.setStatus(AnalysisJob.AnalysisStatus.RUNNING);
@@ -85,39 +105,40 @@ public class AiAnalysisService {
     }
 
     @Async("aiExecutor") // configure ThreadPoolTaskExecutor bean named aiExecutor
-    public void processChunkAsync(String jobId, ReactionService.ReactionCategory entityType, String entityId, List<CommentRequest> chunk, String[] modes) {
+    public void processChunkAsync(String jobId, ReactionService.ReactionCategory entityType, String entityId, List<CommentRequest> chunk, String context) {
         try {
             // Build inputs for AiClient
             List<CommentRequest> inputs = chunk.stream().map(c ->
-                    new CommentRequest(c.id(), c.content(), c.createdAt())
+            new CommentRequest(c.id(), c.content(), c.createdAt())
             ).collect(Collectors.toList());
-
+            
+            
             // optional context, e.g. post title
-            String context = "Entity: " + entityType + " id:" + entityId;
-
+            // String context = "Entity: " + entityType + " id:" + entityId;
+            
             // call LLM
             String raw = aiClient.analyzeChunk(inputs, context);
 
             // parse JSON array result from raw. The provider may wrap result - extract model text portion if needed.
             String jsonArray = extractJsonArrayFromModelResponse(raw);
+            System.out.println(jsonArray);
 
             List<ChunkResponse> results = objectMapper.readValue(jsonArray, new TypeReference<List<ChunkResponse>>() {});
             // persist results per comment
             List<CommentAnalysis> toSave = new ArrayList<>();
             for (ChunkResponse r : results) {
                 CommentAnalysis ca = CommentAnalysis.builder()
-                        .commentId(r.getId())
+                        .commentId(r.getCommentId() != null ? r.getCommentId() : r.getId())
                         .entityType(entityType)
                         .entityId(entityId)
                         .sentiment(r.getSentiment())
                         .sentimentScore(r.getSentimentScore())
-                        .tone(r.getTone())
-                        .toneConfidence(r.getToneConfidence())
+//                        .tone(r.getTone())
+//                        .toneConfidence(r.getToneConfidence())
                         .moderationFlagged(r.getModeration() != null && r.getModeration().isFlagged())
                         .moderationCategories(r.getModeration() != null ? r.getModeration().getCategories() : null)
                         .moderationConfidence(r.getModeration() != null ? r.getModeration().getConfidence() : null)
-                        .modelName("gemini")
-                        .modelVersion("1.5 flash")
+                        .modelName(aiClient.getModelName())
                         .analyzedAt(Instant.now())
                         .rawResponse(objectMapper.writeValueAsString(r))
                         .build();
@@ -133,6 +154,10 @@ public class AiAnalysisService {
                 job.setCompletedAt(Instant.now());
             }
             jobRepo.save(job);
+            // update analysed field for all comments in the chunk
+            for (CommentRequest c : chunk) {
+                reactionService.updateAnalysedByTargetIdAndType(c.id(), ReactionBaseDocument.ReactionType.COMMENT, true, entityType);
+            }
 
             // update trend / aggregates and run alerts
             trendService.recomputeAggregatesAndMaybeAlert(entityType, entityId);
@@ -167,10 +192,11 @@ public class AiAnalysisService {
     @Setter
     public static class ChunkResponse {
         private String id;
+        private String commentId;  // Add this field to handle the JSON response
         private String sentiment;
         private Double sentimentScore;
-        private String tone;
-        private Double toneConfidence;
+        // private String tone;
+        // private Double toneConfidence;
         private Moderation moderation;
 
         @Setter

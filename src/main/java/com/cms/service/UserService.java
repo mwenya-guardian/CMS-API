@@ -10,7 +10,6 @@ import com.cms.exception.ResourceNotFoundException;
 import com.cms.model.User;
 import com.cms.repository.UserRepository;
 
-import io.jsonwebtoken.lang.Assert;
 import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -195,5 +194,10 @@ public class UserService {
         }
         return false;
 
+    }
+
+    public String getFullName(String id) {
+        User user = getById(id);
+        return user.getFirstname() + " " + user.getLastname();
     }
 }

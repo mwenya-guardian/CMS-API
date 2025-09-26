@@ -9,5 +9,6 @@ public interface AiClient {
      * Send a chunk of comments (already prepared) to the configured model and return raw JSON response.
      * Implementation is responsible for HTTP, authentication, timeout handling.
      */
+    String getModelName();
     String analyzeChunk(List<CommentRequest> comments, String promptContext) throws Exception;
     }

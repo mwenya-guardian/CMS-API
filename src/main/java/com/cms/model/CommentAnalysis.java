@@ -25,8 +25,8 @@ public class CommentAnalysis {
     // analysis results
     private String sentiment;        // positive|neutral|negative
     private Double sentimentScore;   // 0.0 - 1.0
-    private String tone;             // e.g. excited, sarcastic, concerned
-    private Double toneConfidence;   // 0.0 - 1.0
+//    private String tone;             // e.g. excited, sarcastic, concerned
+//    private Double toneConfidence;   // 0.0 - 1.0
 
     private Boolean moderationFlagged;
     private List<String> moderationCategories;
@@ -34,7 +34,7 @@ public class CommentAnalysis {
 
     // metadata
     private String modelName;
-    private String modelVersion;
+//    private String modelVersion;
     private Instant analyzedAt;
     private String rawResponse; // raw JSON from LLM (for debugging)
 }

@@ -22,6 +22,9 @@ public abstract class ReactionBaseDocument extends BaseDocument{
     @Setter
     private ReactionType type;
 
+    @Setter
+    private Boolean analysed = false;
+
     private String comment;
 
     public ReactionBaseDocument(User user, ReactionType type, String comment){

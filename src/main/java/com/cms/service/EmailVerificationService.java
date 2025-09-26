@@ -17,7 +17,7 @@ import java.util.Random;
 public class EmailVerificationService {
     
     private final EmailVerificationRepository verificationRepository;
-    private final GmailSmtpEmailService emailService;
+    private final EmailService emailService;
     
     /**
      * Generate and send verification code for user registration

@@ -20,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 public class MailController {
 
-    private final GmailSmtpEmailService emailService;
+    private final EmailService emailService;
 
     @PostMapping("/send-with-attachments")
     public ResponseEntity<String> sendWithAttachments(@RequestParam("to") String to,

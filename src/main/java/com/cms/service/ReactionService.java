@@ -1,5 +1,6 @@
 package com.cms.service;
 
+import com.cms.dto.request.CommentRequest;
 import com.cms.exception.DuplicateResourceException;
 import com.cms.model.*;
 import com.cms.model.ReactionBaseDocument.ReactionType;
@@ -9,6 +10,14 @@ import com.cms.repository.PublicationReactionRepository;
 import com.cms.repository.QuoteReactionRepository;
 import lombok.AllArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -19,6 +28,7 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class ReactionService {
+    private MongoTemplate mongoTemplate;
 
     private final PostReactionRepository postReactionRepo;
     private final PublicationReactionRepository publicationReactionRepo;
@@ -131,6 +141,30 @@ public class ReactionService {
             case PUBLICATION -> publicationReactionRepo.findByPublicationIdAndType(targetId, type);
             case EVENT -> eventReactionRepo.findByEventIdAndType(targetId, type);
             case QUOTE -> quoteReactionRepo.findByQuoteIdAndType(targetId, type);
+
+        };
+    }
+    public Page<? extends ReactionBaseDocument> findByTypeAndTargetIdPagedForAi(ReactionBaseDocument.ReactionType type, ReactionCategory category, String targetId, int limit, int page) {
+        Assert.notNull(type, "type must not be null");
+        Assert.notNull(category, "category must not be null");
+
+        Pageable pageable = PageRequest.of(page - 1, limit, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        return switch (category) {
+            case POST -> postReactionRepo.findByPostIdAndTypeAndAnalysedFalse(targetId,type, pageable);
+            case PUBLICATION -> publicationReactionRepo.findByPublicationIdAndTypeAndAnalysedFalse(targetId, type, pageable);
+            case EVENT -> eventReactionRepo.findByEventIdAndTypeAndAnalysedFalse(targetId, type, pageable);
+            case QUOTE -> quoteReactionRepo.findByQuoteIdAndTypeAndAnalysedFalse(targetId, type, pageable);
+        };
+    }public Page<? extends ReactionBaseDocument> findByTypeAndTargetIdPaged(ReactionBaseDocument.ReactionType type, ReactionCategory category, String targetId, int limit, int page) {
+        Assert.notNull(type, "type must not be null");
+        Assert.notNull(category, "category must not be null");
+
+        Pageable pageable = PageRequest.of(page - 1, limit, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        return switch (category) {
+            case POST -> postReactionRepo.findByPostIdAndType(targetId,type, pageable);
+            case PUBLICATION -> publicationReactionRepo.findByPublicationIdAndType(targetId, type, pageable);
+            case EVENT -> eventReactionRepo.findByEventIdAndType(targetId, type, pageable);
+            case QUOTE -> quoteReactionRepo.findByQuoteIdAndType(targetId, type, pageable);
         };
     }
     public List<? extends ReactionBaseDocument> findByTypeAndUserId(ReactionBaseDocument.ReactionType type, ReactionCategory category, String userId) {
@@ -176,6 +210,14 @@ public class ReactionService {
             case EVENT -> eventReactionRepo.findByUserIdAndEventIdAndType(userId, targetId, type);
             case QUOTE -> quoteReactionRepo.findByUserIdAndQuoteIdAndType(userId, targetId, type);
         };
+    }
+    public List<CommentRequest> getCommentForAnalysis(String targetId, ReactionCategory category, int limit, int page){
+        return findByTypeAndTargetIdPagedForAi(ReactionType.COMMENT, category, targetId, limit, page).getContent()
+                .stream().map(
+                        (comment)->{
+                            return new CommentRequest(comment.getId(), comment.getComment(), comment.getCreatedAt());
+                        }
+                ).toList();
     }
 
     // -----------------------
@@ -264,6 +306,29 @@ public class ReactionService {
 
             default:
                 throw new IllegalArgumentException("Unsupported reaction category: " + category);
+        }
+    }
+    public void updateAnalysedByTargetIdAndType(String Id, ReactionBaseDocument.ReactionType type, Boolean analysed, ReactionCategory category) {
+        Assert.notNull(Id, "Id must not be null");
+        Assert.notNull(type, "type must not be null");
+        Assert.notNull(category, "category must not be null");
+        Assert.notNull(analysed, "analysed must not be null");
+
+        Query query = new Query(Criteria.where("id").is(Id));
+        Update update = new Update().set("analysed", analysed);
+        switch (category) {
+            case POST:
+                mongoTemplate.updateFirst(query, update, PostReaction.class);
+                return;
+            case PUBLICATION:
+                mongoTemplate.updateFirst(query, update, PublicationReaction.class);
+                return;
+            case EVENT:
+                mongoTemplate.updateFirst(query, update, EventReaction.class);
+                return;
+            case QUOTE:
+                mongoTemplate.updateFirst(query, update, QuoteReaction.class);
+                return;
         }
     }
 
