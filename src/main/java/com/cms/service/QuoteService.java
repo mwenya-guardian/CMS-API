@@ -133,9 +133,11 @@ public class QuoteService {
             quote.setFeatured(request.getFeatured());
         }
         if(request.getImageUrl() == null || request.getImageUrl().isBlank()){
-            quote.setImageUrl(request.getImageUrl());
+            quote.setImageUrl(null);
             if(quote.getImageUrl() != null && !quote.getImageUrl().isBlank())
                 fileService.deleteFile(quote.getImageUrl());
+        } else {
+            quote.setImageUrl(request.getImageUrl());
         }
     }
     public FileUploadResponse uploadImage(MultipartFile file, Boolean isPublic) throws IOException {

@@ -138,9 +138,11 @@ public class PublicationService {
             publication.setFeatured(request.getFeatured());
         }
         if(request.getImageUrl() == null || request.getImageUrl().isBlank()){
-            publication.setImageUrl(request.getImageUrl());
+            publication.setImageUrl(null);
             if(publication.getImageUrl() != null && !publication.getImageUrl().isBlank())
                 fileService.deleteFile(publication.getImageUrl());
+        } else {
+            publication.setImageUrl(request.getImageUrl());
         }
     }
     public FileUploadResponse uploadImage(MultipartFile file, Boolean isPublic) throws IOException {

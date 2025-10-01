@@ -136,9 +136,11 @@ public class EventService {
         event.setFeatured(request.getFeatured());
 
         if(request.getImageUrl() == null || request.getImageUrl().isBlank()){
-            event.setImageUrl(request.getImageUrl());
+            event.setImageUrl(null);
             if(event.getImageUrl() != null && !event.getImageUrl().isBlank())
                 fileService.deleteFile(event.getImageUrl());
+        } else {
+            event.setImageUrl(request.getImageUrl());
         }
     }
     public FileUploadResponse uploadImage(MultipartFile file, Boolean isPublic) throws IOException {
