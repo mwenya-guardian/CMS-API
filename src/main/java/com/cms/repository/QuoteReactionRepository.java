@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface QuoteReactionRepository extends MongoRepository<QuoteReaction, String> {
@@ -28,4 +29,9 @@ public interface QuoteReactionRepository extends MongoRepository<QuoteReaction, 
     // Custom queries that updates the analysed field
     @Query(value = "{ 'quoteId': ?0, 'type': ?1, 'analysed': false }", count = true)
     long countByQuoteIdAndTypeAndAnalysedFalse(String quoteId, ReactionBaseDocument.ReactionType type);
+    
+    // Analysis support methods
+    long countByType(ReactionBaseDocument.ReactionType type);
+    List<QuoteReaction> findByQuoteIdAndTypeAndCreatedAtBetween(String quoteId, ReactionBaseDocument.ReactionType type, Instant startDate, Instant endDate);
+    List<QuoteReaction> findByTypeAndCreatedAtBetween(ReactionBaseDocument.ReactionType type, Instant startDate, Instant endDate);
 }

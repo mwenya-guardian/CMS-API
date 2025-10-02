@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import java.time.Instant;
 import java.util.List;
 
 public interface EventReactionRepository extends MongoRepository<EventReaction, String> {
@@ -27,4 +28,9 @@ public interface EventReactionRepository extends MongoRepository<EventReaction, 
     // Custom queries that updates the analysed field
     @Query(value = "{ 'eventId': ?0, 'type': ?1, 'analysed': false }", count = true)
     long countByEventIdAndTypeAndAnalysedFalse(String eventId, ReactionBaseDocument.ReactionType type);
+    
+    // Analysis support methods
+    long countByType(ReactionBaseDocument.ReactionType type);
+    List<EventReaction> findByEventIdAndTypeAndCreatedAtBetween(String eventId, ReactionBaseDocument.ReactionType type, Instant startDate, Instant endDate);
+    List<EventReaction> findByTypeAndCreatedAtBetween(ReactionBaseDocument.ReactionType type, Instant startDate, Instant endDate);
 }

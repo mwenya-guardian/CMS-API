@@ -24,6 +24,7 @@ import org.springframework.util.Assert;
 import java.util.Optional;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -395,6 +396,136 @@ public class ReactionService {
         if (reaction instanceof EventReaction) return ReactionCategory.EVENT;
         if (reaction instanceof QuoteReaction) return ReactionCategory.QUOTE;
         throw new IllegalArgumentException("Unable to determine ReactionCategory from instance: " + reaction.getClass().getName());
+    }
+
+    // -----------------------
+    // Analysis Support Methods
+    // -----------------------
+    
+    /**
+     * Count reactions by type across all categories
+     */
+    public long countReactionsByType(String reactionType) {
+        ReactionType type = ReactionType.valueOf(reactionType.toUpperCase());
+        
+        long totalCount = 0;
+        for (ReactionCategory category : ReactionCategory.values()) {
+            totalCount += countReactionsByTypeAndCategory(type, category);
+        }
+        return totalCount;
+    }
+    
+    /**
+     * Count reactions by type for a specific category
+     */
+    public long countReactionsByTypeAndCategory(ReactionType type, ReactionCategory category) {
+        return switch (category) {
+            case POST -> postReactionRepo.countByType(type);
+            case PUBLICATION -> publicationReactionRepo.countByType(type);
+            case EVENT -> eventReactionRepo.countByType(type);
+            case QUOTE -> quoteReactionRepo.countByType(type);
+        };
+    }
+    
+    /**
+     * Get reactions by type and date range for trend analysis
+     */
+    public List<Map<String, Object>> getReactionsByTypeAndDateRange(
+            String reactionType, 
+            ReactionCategory entityType, 
+            String entityId, 
+            java.time.Instant startDate, 
+            java.time.Instant endDate
+    ) {
+        ReactionType type = ReactionType.valueOf(reactionType.toUpperCase());
+        
+        if (entityId != null) {
+            // Get reactions for specific entity
+            return getReactionsByTypeEntityAndDateRange(type, entityType, entityId, startDate, endDate);
+        } else {
+            // Get reactions for all entities of this type
+            return getReactionsByTypeAndCategoryAndDateRange(type, entityType, startDate, endDate);
+        }
+    }
+    
+    /**
+     * Get reactions for a specific entity and date range
+     */
+    private List<Map<String, Object>> getReactionsByTypeEntityAndDateRange(
+            ReactionType type, 
+            ReactionCategory category, 
+            String entityId, 
+            java.time.Instant startDate, 
+            java.time.Instant endDate
+    ) {
+        List<? extends ReactionBaseDocument> reactions = switch (category) {
+            case POST -> postReactionRepo.findByPostIdAndTypeAndCreatedAtBetween(entityId, type, startDate, endDate);
+            case PUBLICATION -> publicationReactionRepo.findByPublicationIdAndTypeAndCreatedAtBetween(entityId, type, startDate, endDate);
+            case EVENT -> eventReactionRepo.findByEventIdAndTypeAndCreatedAtBetween(entityId, type, startDate, endDate);
+            case QUOTE -> quoteReactionRepo.findByQuoteIdAndTypeAndCreatedAtBetween(entityId, type, startDate, endDate);
+        };
+        
+        return reactions.stream()
+                .map(reaction -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", reaction.getId());
+                    map.put("createdAt", reaction.getCreatedAt());
+                    map.put("type", reaction.getType());
+                    return map;
+                })
+                .toList();
+    }
+    
+    /**
+     * Get reactions for all entities of a category and date range
+     */
+    private List<Map<String, Object>> getReactionsByTypeAndCategoryAndDateRange(
+            ReactionType type, 
+            ReactionCategory category, 
+            java.time.Instant startDate, 
+            java.time.Instant endDate
+    ) {
+        List<? extends ReactionBaseDocument> reactions = switch (category) {
+            case POST -> postReactionRepo.findByTypeAndCreatedAtBetween(type, startDate, endDate);
+            case PUBLICATION -> publicationReactionRepo.findByTypeAndCreatedAtBetween(type, startDate, endDate);
+            case EVENT -> eventReactionRepo.findByTypeAndCreatedAtBetween(type, startDate, endDate);
+            case QUOTE -> quoteReactionRepo.findByTypeAndCreatedAtBetween(type, startDate, endDate);
+        };
+        
+        return reactions.stream()
+                .map(reaction -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", reaction.getId());
+                    map.put("createdAt", reaction.getCreatedAt());
+                    map.put("type", reaction.getType());
+                    return map;
+                })
+                .toList();
+    }
+
+    /**
+     * Get comment details by comment ID and category
+     */
+    public Map<String, Object> getCommentDetails(String commentId, ReactionCategory category) {
+        Optional<? extends ReactionBaseDocument> reactionOpt = findById(commentId, category);
+        
+        if (reactionOpt.isEmpty()) {
+            throw new RuntimeException("Comment not found");
+        }
+        
+        ReactionBaseDocument reaction = reactionOpt.get();
+        
+        if (reaction.getType() != ReactionType.COMMENT) {
+            throw new RuntimeException("Not a comment");
+        }
+        
+        Map<String, Object> details = new HashMap<>();
+        details.put("id", reaction.getId());
+        details.put("content", reaction.getComment());
+        details.put("createdAt", reaction.getCreatedAt());
+        details.put("userId", reaction.getUser().getId());
+        
+        return details;
     }
 
 }

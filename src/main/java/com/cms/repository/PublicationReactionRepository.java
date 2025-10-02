@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface PublicationReactionRepository extends MongoRepository<PublicationReaction, String> {
@@ -26,4 +27,9 @@ public interface PublicationReactionRepository extends MongoRepository<Publicati
     // Custom queries that updates the analysed field
     @Query(value = "{ 'publicationId': ?0, 'type': ?1, 'analysed': false }", count = true)
     long countByPublicationIdAndTypeAndAnalysedFalse(String publicationId, ReactionBaseDocument.ReactionType type);
+    
+    // Analysis support methods
+    long countByType(ReactionBaseDocument.ReactionType type);
+    List<PublicationReaction> findByPublicationIdAndTypeAndCreatedAtBetween(String publicationId, ReactionBaseDocument.ReactionType type, Instant startDate, Instant endDate);
+    List<PublicationReaction> findByTypeAndCreatedAtBetween(ReactionBaseDocument.ReactionType type, Instant startDate, Instant endDate);
 }
