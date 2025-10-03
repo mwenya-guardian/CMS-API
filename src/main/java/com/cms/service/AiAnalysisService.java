@@ -5,14 +5,11 @@ import com.cms.model.AnalysisJob;
 import com.cms.dto.request.CommentRequest;
 import com.cms.model.CommentAnalysis;
 import com.cms.model.ReactionBaseDocument;
+import com.cms.model.ReactionTrackedModel;
 import com.cms.repository.AnalysisJobRepository;
 import com.cms.repository.CommentAnalysisRepository;
 import com.cms.dto.request.BulkAnalysisRequest;
 import com.cms.dto.response.BulkAnalysisResponse;
-import com.cms.service.PostService;
-import com.cms.service.PublicationService;
-import com.cms.service.EventService;
-import com.cms.service.QuoteService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -41,6 +38,7 @@ public class AiAnalysisService {
     private final PublicationService publicationService;
     private final EventService eventService;
     private final QuoteService quoteService;
+    private final ReactionTrackedModelService reactionTrackedModelService;
     // config
     private final int CHUNK_SIZE = 40;    // tune for token limits
     private final int PARALLELISM = 3; // if you do async concurrency
@@ -68,15 +66,6 @@ public class AiAnalysisService {
                 .meta(Map.of("chunkSize", CHUNK_SIZE))
                 .build();
 
-//        AnalysisJob job = new AnalysisJob();
-//            job.setEntityType(request.getEntityType());
-//            job.setEntityId(request.getEntityId());
-//            job.setSubmittedAt(Instant.now());
-//            job.setStatus(AnalysisJob.AnalysisStatus.PENDING);
-//            job.setTotalComments(total);
-//            job.setProcessedComments(0);
-//            job.setMeta(Map.of("chunkSize", CHUNK_SIZE));
-
 
         job = jobRepo.save(job);
 
@@ -94,6 +83,58 @@ public class AiAnalysisService {
         job.setStatus(AnalysisJob.AnalysisStatus.RUNNING);
         jobRepo.save(job);
         return new BulkAnalysisResponse(job.getId(), submitted.get());
+    }
+    
+    /**
+     * Submit bulk analysis and wait for completion
+     * @param request The bulk analysis request
+     * @param comments The comments to analyze
+     * @return The analysis job ID
+     */
+    public String submitBulkAndWait(@NotNull BulkAnalysisRequest request, List<CommentRequest> comments) {
+        BulkAnalysisResponse response = submitBulk(request, comments);
+        String jobId = response.jobId();
+        
+        // Wait for job completion
+        waitForJobCompletion(jobId);
+        
+        return jobId;
+    }
+    
+    /**
+     * Wait for a job to complete (with timeout)
+     * @param jobId The job ID to wait for
+     */
+    private void waitForJobCompletion(String jobId) {
+        int maxWaitTime = 300; // 5 minutes timeout
+        int waitInterval = 2; // Check every 2 seconds
+        int waited = 0;
+        
+        while (waited < maxWaitTime) {
+            AnalysisJob job = jobRepo.findById(jobId).orElse(null);
+            if (job == null) {
+                System.err.println("Job not found: " + jobId);
+                break;
+            }
+            
+            if (job.getStatus() == AnalysisJob.AnalysisStatus.SUCCESS || 
+                job.getStatus() == AnalysisJob.AnalysisStatus.FAILED) {
+                System.out.println("Job " + jobId + " completed with status: " + job.getStatus());
+                break;
+            }
+            
+            try {
+                Thread.sleep(waitInterval * 1000);
+                waited += waitInterval;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        
+        if (waited >= maxWaitTime) {
+            System.err.println("Job " + jobId + " timed out after " + maxWaitTime + " seconds");
+        }
     }
 
     private List<List<CommentRequest>> chunk(List<CommentRequest> comments, int size) {
@@ -152,6 +193,9 @@ public class AiAnalysisService {
             if (job.getProcessedComments() >= job.getTotalComments()) {
                 job.setStatus(AnalysisJob.AnalysisStatus.SUCCESS);
                 job.setCompletedAt(Instant.now());
+                
+                // Note: Model marking as analyzed is now handled by the scheduler
+                // to ensure it only happens after ALL pages are processed
             }
             jobRepo.save(job);
             // update analysed field for all comments in the chunk
@@ -185,6 +229,18 @@ public class AiAnalysisService {
         }
         // if not found, return raw (let the parser fail and the chunk be retried)
         return raw;
+    }
+    
+    /**
+     * Convert ReactionService.ReactionCategory to ReactionTrackedModel.ModelType
+     */
+    private ReactionTrackedModel.ModelType convertToModelType(ReactionService.ReactionCategory category) {
+        return switch (category) {
+            case POST -> ReactionTrackedModel.ModelType.POST;
+            case PUBLICATION -> ReactionTrackedModel.ModelType.PUBLICATION;
+            case EVENT -> ReactionTrackedModel.ModelType.EVENT;
+            case QUOTE -> ReactionTrackedModel.ModelType.QUOTE;
+        };
     }
 
 

@@ -15,8 +15,8 @@ import java.time.Instant;
 public class BulkAnalysisRequest {
     private ReactionService.ReactionCategory entityType;
     private String entityId;
-    private String[] modes; // e.g. ["sentiment","tone","moderation"]
-    private Instant since;  // optional - limit comments to analyze
+    // private String[] modes; // e.g. ["sentiment","tone","moderation"]
+    // private Instant since;  // optional - limit comments to analyze
     private int maxComments = 1000;
 
 }

@@ -22,7 +22,7 @@ import java.util.concurrent.ScheduledFuture;
 
 @Component
 @AllArgsConstructor
-public class NewsletterScheduler {
+public class NewsletterSchedulerService {
 
     private final NewsletterScheduleRepository scheduleRepo;
     private final TaskScheduler taskScheduler;

@@ -1,6 +1,7 @@
 package com.cms.service;
 
 import com.cms.dto.request.CommentRequest;
+import com.cms.dto.response.PageResponse;
 import com.cms.exception.DuplicateResourceException;
 import com.cms.model.*;
 import com.cms.model.ReactionBaseDocument.ReactionType;
@@ -212,13 +213,16 @@ public class ReactionService {
             case QUOTE -> quoteReactionRepo.findByUserIdAndQuoteIdAndType(userId, targetId, type);
         };
     }
-    public List<CommentRequest> getCommentForAnalysis(String targetId, ReactionCategory category, int limit, int page){
-        return findByTypeAndTargetIdPagedForAi(ReactionType.COMMENT, category, targetId, limit, page).getContent()
+    public PageResponse<CommentRequest> getCommentForAnalysis(String targetId, ReactionCategory category, int limit, int page){
+         Page<? extends ReactionBaseDocument> comments = findByTypeAndTargetIdPagedForAi(ReactionType.COMMENT, category, targetId, limit, page);
+         List<CommentRequest> commentRequests = comments.getContent()
                 .stream().map(
                         (comment)->{
                             return new CommentRequest(comment.getId(), comment.getComment(), comment.getCreatedAt());
                         }
                 ).toList();
+         return new PageResponse<>(commentRequests, comments.getNumber() + 1, comments.getSize(), comments.getTotalElements());
+
     }
 
     // -----------------------

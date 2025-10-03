@@ -37,7 +37,7 @@ public class AiAnalysisController {
     public ResponseEntity<BulkAnalysisResponse> analyzeBulk(@RequestBody BulkAnalysisRequest request) {
         // load comments belonging to entity (implement your CommentRepository find method)
 //        List<CommentRequest> comments = commentRepository.findCommentsByEntity(request.getEntityType(), request.getEntityId(), request.getSince(), request.getMaxComments());
-        List<CommentRequest> comments = reactionService.getCommentForAnalysis(request.getEntityId(), request.getEntityType(), request.getMaxComments(), 1);
+        List<CommentRequest> comments = reactionService.getCommentForAnalysis(request.getEntityId(), request.getEntityType(), request.getMaxComments(), 1).getData();
         if(comments.isEmpty()){
             return ResponseEntity.ok(new BulkAnalysisResponse(null, 0));
         }

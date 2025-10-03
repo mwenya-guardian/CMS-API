@@ -100,7 +100,7 @@ public final class ModerationPromptBuilder {
                  "  }\n" +
                  "]";
 
-        return categoriesIntro + "Return only the JSON object. " + sampleOutput;
+        return categoriesIntro;// + "Return only the JSON object. ";// + sampleOutput;
     }
 
     private static String escapeJson(String s) {

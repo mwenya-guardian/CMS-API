@@ -2,7 +2,7 @@ package com.cms.controller;
 
 import com.cms.model.NewsletterSchedule;
 import com.cms.repository.NewsletterScheduleRepository;
-import com.cms.service.NewsletterScheduler;
+import com.cms.service.NewsletterSchedulerService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class NewsletterScheduleController {
     private final NewsletterScheduleRepository repo;
-    private final NewsletterScheduler scheduler;
+    private final NewsletterSchedulerService scheduler;
 
     @GetMapping
     public List<NewsletterSchedule> all() { return repo.findAll(); }
