@@ -147,6 +147,7 @@ public class AiAnalysisService {
 
     @Async("aiExecutor") // configure ThreadPoolTaskExecutor bean named aiExecutor
     public void processChunkAsync(String jobId, ReactionService.ReactionCategory entityType, String entityId, List<CommentRequest> chunk, String context) {
+        System.out.println("Starting chunk processing for job " + jobId + " with " + chunk.size() + " comments");
         try {
             // Build inputs for AiClient
             List<CommentRequest> inputs = chunk.stream().map(c ->
@@ -186,18 +187,16 @@ public class AiAnalysisService {
                 toSave.add(ca);
             }
             analysisRepo.saveAll(toSave);
+            System.out.println("Saved " + toSave.size() + " comment analyses for job " + jobId);
 
-            // update processed count in job
-            AnalysisJob job = jobRepo.findById(jobId).orElseThrow();
-            job.setProcessedComments(job.getProcessedComments() + chunk.size());
-            if (job.getProcessedComments() >= job.getTotalComments()) {
-                job.setStatus(AnalysisJob.AnalysisStatus.SUCCESS);
-                job.setCompletedAt(Instant.now());
-                
-                // Note: Model marking as analyzed is now handled by the scheduler
-                // to ensure it only happens after ALL pages are processed
+            // update processed count in job atomically to avoid race conditions
+            boolean jobCompleted = updateJobProgressAtomically(jobId, chunk.size());
+            
+            if (jobCompleted) {
+                System.out.println("Job " + jobId + " completed successfully with all chunks processed");
+            } else {
+                System.out.println("Job " + jobId + " progress updated, still processing...");
             }
-            jobRepo.save(job);
             // update analysed field for all comments in the chunk
             for (CommentRequest c : chunk) {
                 reactionService.updateAnalysedByTargetIdAndType(c.id(), ReactionBaseDocument.ReactionType.COMMENT, true, entityType);
@@ -231,6 +230,72 @@ public class AiAnalysisService {
         return raw;
     }
     
+    /**
+     * Update job progress atomically to avoid race conditions in concurrent chunk processing
+     * @param jobId The job ID to update
+     * @param chunkSize The number of comments processed in this chunk
+     * @return true if the job is now completed, false otherwise
+     */
+    private boolean updateJobProgressAtomically(String jobId, int chunkSize) {
+        int maxRetries = 5;
+        int retryCount = 0;
+        
+        while (retryCount < maxRetries) {
+            try {
+                AnalysisJob job = jobRepo.findById(jobId).orElseThrow();
+                
+                // Check if job is already completed or failed
+                if (job.getStatus() == AnalysisJob.AnalysisStatus.SUCCESS || 
+                    job.getStatus() == AnalysisJob.AnalysisStatus.FAILED) {
+                    return job.getStatus() == AnalysisJob.AnalysisStatus.SUCCESS;
+                }
+                
+                int newProcessedCount = job.getProcessedComments() + chunkSize;
+                job.setProcessedComments(newProcessedCount);
+                
+                // Check if job is now complete
+                if (newProcessedCount >= job.getTotalComments()) {
+                    job.setStatus(AnalysisJob.AnalysisStatus.SUCCESS);
+                    job.setCompletedAt(Instant.now());
+                    System.out.println("Job " + jobId + " marked as SUCCESS - processed " + newProcessedCount + "/" + job.getTotalComments() + " comments");
+                }
+                
+                jobRepo.save(job);
+                return newProcessedCount >= job.getTotalComments();
+                
+            } catch (Exception e) {
+                retryCount++;
+                System.err.println("Failed to update job progress (attempt " + retryCount + "/" + maxRetries + "): " + e.getMessage());
+                
+                if (retryCount >= maxRetries) {
+                    System.err.println("Max retries reached for job " + jobId + ". Marking as failed.");
+                    try {
+                        AnalysisJob job = jobRepo.findById(jobId).orElse(null);
+                        if (job != null) {
+                            job.setStatus(AnalysisJob.AnalysisStatus.FAILED);
+                            job.setFailureReason("Failed to update progress after " + maxRetries + " retries");
+                            job.setCompletedAt(Instant.now());
+                            jobRepo.save(job);
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("Failed to mark job as failed: " + ex.getMessage());
+                    }
+                    return false;
+                }
+                
+                // Wait before retry
+                try {
+                    Thread.sleep(100 * retryCount); // Exponential backoff
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+        }
+        
+        return false;
+    }
+
     /**
      * Convert ReactionService.ReactionCategory to ReactionTrackedModel.ModelType
      */
