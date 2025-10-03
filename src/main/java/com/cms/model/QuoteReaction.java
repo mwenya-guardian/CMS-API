@@ -11,7 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Getter
 @Setter
 @NoArgsConstructor
-@Document
+@Document(collection = "quote_reactions")
 public class QuoteReaction extends ReactionBaseDocument {
     @DBRef(lazy = true)
     @Indexed

@@ -4,6 +4,7 @@ import com.cms.dto.request.QuoteRequest;
 import com.cms.dto.response.FileUploadResponse;
 import com.cms.dto.response.PageResponse;
 import com.cms.model.Quote;
+import com.cms.model.ReactionTrackedModel;
 import com.cms.repository.QuoteRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +32,7 @@ public class QuoteService {
     private QuoteRepository quoteRepository;
     private MongoTemplate mongoTemplate;
     private FileService fileService;
+    private ReactionTrackedModelService reactionTrackedModelService;
     
     public List<Quote> getAllQuotes(Integer year, Integer month, Integer day, 
                                   String category, Boolean featured, String search) {
@@ -60,7 +62,12 @@ public class QuoteService {
     public Quote createQuote(QuoteRequest request) throws IOException {
         Quote quote = new Quote();
         updateQuoteFromRequest(quote, request);
-        return quoteRepository.save(quote);
+        Quote savedQuote = quoteRepository.save(quote);
+        
+        // Track this model for reactions
+        reactionTrackedModelService.trackModel(savedQuote.getId(), ReactionTrackedModel.ModelType.QUOTE);
+        
+        return savedQuote;
     }
     
     public Quote updateQuote(String id, QuoteRequest request) throws IOException {

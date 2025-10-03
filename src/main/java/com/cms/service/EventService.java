@@ -4,6 +4,7 @@ import com.cms.dto.request.EventRequest;
 import com.cms.dto.response.FileUploadResponse;
 import com.cms.dto.response.PageResponse;
 import com.cms.model.Event;
+import com.cms.model.ReactionTrackedModel;
 import com.cms.repository.EventRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +28,7 @@ public class EventService {
     private EventRepository eventRepository;
     private MongoTemplate mongoTemplate;
     private FileService fileService;
+    private ReactionTrackedModelService reactionTrackedModelService;
     
     public List<Event> getAllEvents(Integer year, Integer month, Integer day, 
                                   String category, Boolean featured, String search) {
@@ -56,7 +58,12 @@ public class EventService {
     public Event createEvent(EventRequest request) throws IOException {
         Event event = new Event();
         updateEventFromRequest(event, request);
-        return eventRepository.save(event);
+        Event savedEvent = eventRepository.save(event);
+        
+        // Track this model for reactions
+        reactionTrackedModelService.trackModel(savedEvent.getId(), ReactionTrackedModel.ModelType.EVENT);
+        
+        return savedEvent;
     }
     
     public Event updateEvent(String id, EventRequest request) throws IOException {

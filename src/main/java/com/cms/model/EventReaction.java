@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Getter
 @Setter
 @NoArgsConstructor
-@Document
+@Document(collection = "event_reactions")
 public class EventReaction extends ReactionBaseDocument {
     @DBRef(lazy = true)
     @Indexed

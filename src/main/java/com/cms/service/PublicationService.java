@@ -4,6 +4,7 @@ import com.cms.dto.request.PublicationRequest;
 import com.cms.dto.response.FileUploadResponse;
 import com.cms.dto.response.PageResponse;
 import com.cms.model.Publication;
+import com.cms.model.ReactionTrackedModel;
 import com.cms.repository.PublicationRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ public class PublicationService {
     private PublicationRepository publicationRepository;
     private MongoTemplate mongoTemplate;
     private FileService fileService;
+    private ReactionTrackedModelService reactionTrackedModelService;
     
     public List<Publication> getAllPublications(Integer year, Integer month, Integer day, 
                                               String category, Boolean featured, String search) {
@@ -63,7 +65,12 @@ public class PublicationService {
     public Publication createPublication(PublicationRequest request) throws IOException {
         Publication publication = new Publication();
         updatePublicationFromRequest(publication, request);
-        return publicationRepository.save(publication);
+        Publication savedPublication = publicationRepository.save(publication);
+        
+        // Track this model for reactions
+        reactionTrackedModelService.trackModel(savedPublication.getId(), ReactionTrackedModel.ModelType.PUBLICATION);
+        
+        return savedPublication;
     }
     
     public Publication updatePublication(String id, PublicationRequest request) throws IOException {

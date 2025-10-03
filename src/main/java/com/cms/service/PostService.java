@@ -6,6 +6,7 @@ import com.cms.exception.WrongFileTypeException;
 import com.cms.model.Post;
 import com.cms.model.PostReaction;
 import com.cms.model.ReactionBaseDocument.ReactionType;
+import com.cms.model.ReactionTrackedModel;
 import com.cms.repository.PostRepository;
 import com.cms.service.ReactionService.ReactionCategory;
 
@@ -29,6 +30,7 @@ public class PostService {
     private final ReactionService reactionService;
     private final AuthService authService;
     private final FileService fileService;
+    private final ReactionTrackedModelService reactionTrackedModelService;
 
 
     public Optional<Post> getById(String id) {
@@ -82,7 +84,12 @@ public class PostService {
         post.setCaption(caption);
         post.setResourceUrl(fileUploadResponse.getUrl()); // store url like private/photos/2025/uuid.jpg
         post.setIsPublic(isPublic);
-        return postRepository.save(post);
+        Post savedPost = postRepository.save(post);
+        
+        // Track this model for reactions
+        reactionTrackedModelService.trackModel(savedPost.getId(), ReactionTrackedModel.ModelType.POST);
+        
+        return savedPost;
     }
 
     public Post createVideoPost(String caption, MultipartFile file, boolean isPublic) throws Exception {
@@ -100,7 +107,12 @@ public class PostService {
         post.setCaption(caption);
         post.setResourceUrl(fileUploadResponse.getUrl()); // store relative path like protected/photos/2025/uuid.jpg
         post.setIsPublic(isPublic);
-        return postRepository.save(post);
+        Post savedPost = postRepository.save(post);
+        
+        // Track this model for reactions
+        reactionTrackedModelService.trackModel(savedPost.getId(), ReactionTrackedModel.ModelType.POST);
+        
+        return savedPost;
     }
 
     public Post createCaptionPost(String caption, Boolean isPublic) {
@@ -108,7 +120,12 @@ public class PostService {
         post.setType(Post.PostType.TEXT);
         post.setCaption(caption);
         post.setIsPublic(Boolean.TRUE.equals(isPublic));
-        return postRepository.save(post);
+        Post savedPost = postRepository.save(post);
+        
+        // Track this model for reactions
+        reactionTrackedModelService.trackModel(savedPost.getId(), ReactionTrackedModel.ModelType.POST);
+        
+        return savedPost;
     }
 
     public Post updateCaption(String id, String caption) {
