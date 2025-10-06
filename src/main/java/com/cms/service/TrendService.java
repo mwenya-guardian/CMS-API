@@ -32,7 +32,7 @@ public class TrendService {
         List<CommentAnalysis> window = analysisRepo.findByEntityTypeAndEntityIdAndAnalyzedAtBetween(entityType, entityId, windowStart, windowEnd);
         List<CommentAnalysis> baseline = analysisRepo.findByEntityTypeAndEntityIdAndAnalyzedAtBetween(entityType, entityId, baselineStart, baselineEnd);
 
-        if (window.isEmpty() || baseline.isEmpty()) return;
+//        if (window.isEmpty() || baseline.isEmpty()) return;
 
         long windowNegative = window.stream().filter(c -> "negative".equalsIgnoreCase(c.getSentiment())).count();
         long baselineNegative = baseline.stream().filter(c -> "negative".equalsIgnoreCase(c.getSentiment())).count();

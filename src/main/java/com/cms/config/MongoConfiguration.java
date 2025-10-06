@@ -3,6 +3,8 @@ package com.cms.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,5 +30,9 @@ public class MongoConfiguration {
             return Optional.ofNullable(auth.getName());
         };
     }
+//    @Bean
+//    MongoTransactionManager transactionManager(MongoDatabaseFactory dbFactory) {
+//        return new MongoTransactionManager(dbFactory);
+//    }
 }
 

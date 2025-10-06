@@ -13,10 +13,6 @@ public interface ReactionTrackedModelRepository extends MongoRepository<Reaction
     Optional<ReactionTrackedModel> findByModelIdAndModelType(String modelId, ReactionTrackedModel.ModelType modelType);
     
     List<ReactionTrackedModel> findByModelType(ReactionTrackedModel.ModelType modelType);
-    
-    List<ReactionTrackedModel> findByCommentsAnalyzed(Boolean commentsAnalyzed);
-    
-    List<ReactionTrackedModel> findByModelTypeAndCommentsAnalyzed(ReactionTrackedModel.ModelType modelType, Boolean commentsAnalyzed);
-    
+
     boolean existsByModelIdAndModelType(String modelId, ReactionTrackedModel.ModelType modelType);
 }

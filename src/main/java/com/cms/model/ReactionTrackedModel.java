@@ -27,8 +27,8 @@ public class ReactionTrackedModel extends BaseDocument {
     @Indexed
     private ModelType modelType;
     
-    @NotNull(message = "Comments analyzed status is required")
-    private Boolean commentsAnalyzed = false;
+//    @NotNull(message = "Comments analyzed status is required")
+//    private Boolean commentsAnalyzed = false;
     
     public enum ModelType {
         POST, PUBLICATION, EVENT, QUOTE
@@ -37,12 +37,12 @@ public class ReactionTrackedModel extends BaseDocument {
     public ReactionTrackedModel(String modelId, ModelType modelType) {
         this.modelId = modelId;
         this.modelType = modelType;
-        this.commentsAnalyzed = false;
+//        this.commentsAnalyzed = false;
     }
     
     public ReactionTrackedModel(String modelId, ModelType modelType, Boolean commentsAnalyzed) {
         this.modelId = modelId;
         this.modelType = modelType;
-        this.commentsAnalyzed = commentsAnalyzed != null ? commentsAnalyzed : false;
+//        this.commentsAnalyzed = commentsAnalyzed != null ? commentsAnalyzed : false;
     }
 }

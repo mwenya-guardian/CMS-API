@@ -67,7 +67,7 @@ public class AnalysisSchedulerService {
             
             // Get all tracked models of the specified type
             List<ReactionTrackedModel> trackedModels = reactionTrackedModelService
-                    .getTrackedModelsByTypeAndCommentsAnalyzed(schedule.getModelType(), false);
+                    .getTrackedModelsByType(schedule.getModelType());
             
             if (trackedModels.isEmpty()) {
                 System.out.println("No untracked models found for type: " + schedule.getModelType());
@@ -89,12 +89,6 @@ public class AnalysisSchedulerService {
                     
                     if (!hasComments) {
                         System.out.println("No comments found for model: " + trackedModel.getModelId());
-                        // Mark as analyzed if no comments
-                        reactionTrackedModelService.updateCommentsAnalyzedStatus(
-                                trackedModel.getModelId(), 
-                                trackedModel.getModelType(), 
-                                true
-                        );
                     }
                     // If hasComments is true, the model will be marked as analyzed when the last page completes
                     // (handled in AiAnalysisService.processChunkAsync)
@@ -128,7 +122,7 @@ public class AnalysisSchedulerService {
      */
     private boolean processModelCommentsPageByPage(String modelId, ReactionCategory category) {
         int page = 1;
-        int pageSize = 100; // Process in batches
+        int pageSize = 120; // Process in batches
         boolean hasComments = false;
         List<String> jobIds = new java.util.ArrayList<>();
         
@@ -161,11 +155,6 @@ public class AnalysisSchedulerService {
         
         // Mark model as analyzed after all pages are processed
         if (hasComments) {
-            reactionTrackedModelService.updateCommentsAnalyzedStatus(
-                    modelId, 
-                    convertToModelType(category), 
-                    true
-            );
             System.out.println("Marked model " + modelId + " as analyzed after processing " + jobIds.size() + " pages");
         }
         

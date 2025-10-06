@@ -32,21 +32,6 @@ public class ReactionTrackedModelService {
     }
     
     /**
-     * Update the comments analyzed status for a tracked model
-     * @param modelId The ID of the model
-     * @param modelType The type of the model
-     * @param commentsAnalyzed The new status
-     * @return The updated ReactionTrackedModel
-     */
-    public ReactionTrackedModel updateCommentsAnalyzedStatus(String modelId, ReactionTrackedModel.ModelType modelType, Boolean commentsAnalyzed) {
-        ReactionTrackedModel trackedModel = reactionTrackedModelRepository.findByModelIdAndModelType(modelId, modelType)
-                .orElseThrow(() -> new RuntimeException("Model tracking record not found"));
-        
-        trackedModel.setCommentsAnalyzed(commentsAnalyzed);
-        return reactionTrackedModelRepository.save(trackedModel);
-    }
-    
-    /**
      * Get a tracked model by model ID and type
      * @param modelId The ID of the model
      * @param modelType The type of the model
@@ -64,26 +49,7 @@ public class ReactionTrackedModelService {
     public List<ReactionTrackedModel> getTrackedModelsByType(ReactionTrackedModel.ModelType modelType) {
         return reactionTrackedModelRepository.findByModelType(modelType);
     }
-    
-    /**
-     * Get all tracked models by comments analyzed status
-     * @param commentsAnalyzed The status to filter by
-     * @return List of ReactionTrackedModel
-     */
-    public List<ReactionTrackedModel> getTrackedModelsByCommentsAnalyzed(Boolean commentsAnalyzed) {
-        return reactionTrackedModelRepository.findByCommentsAnalyzed(commentsAnalyzed);
-    }
-    
-    /**
-     * Get all tracked models by type and comments analyzed status
-     * @param modelType The type of the model
-     * @param commentsAnalyzed The status to filter by
-     * @return List of ReactionTrackedModel
-     */
-    public List<ReactionTrackedModel> getTrackedModelsByTypeAndCommentsAnalyzed(ReactionTrackedModel.ModelType modelType, Boolean commentsAnalyzed) {
-        return reactionTrackedModelRepository.findByModelTypeAndCommentsAnalyzed(modelType, commentsAnalyzed);
-    }
-    
+
     /**
      * Check if a model is being tracked
      * @param modelId The ID of the model
