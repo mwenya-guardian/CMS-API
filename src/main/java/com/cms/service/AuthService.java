@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -27,7 +28,7 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
     private JwtTokenProvider tokenProvider;
     
-    public JwtResponse authenticateUser(LoginRequest loginRequest) {
+    public JwtResponse authenticateUser(LoginRequest loginRequest) throws AccessDeniedException {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
                 loginRequest.getEmail(),
@@ -40,6 +41,10 @@ public class AuthService {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         User user = userRepository.findByIdAndActiveTrue(userPrincipal.getId())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found or not activated"));
+        
+        if(user.getRole() == User.UserRole.VIEWER){
+            throw new AccessDeniedException("User not allowed to login");
+        }
 
         String jwt = tokenProvider.generateToken(authentication);
         

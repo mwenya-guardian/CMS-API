@@ -41,15 +41,15 @@ public class AiAnalysisService {
     private final ReactionTrackedModelService reactionTrackedModelService;
     // config
     private final int CHUNK_SIZE = 40;    // tune for token limits
-    private final int PARALLELISM = 3; // if you do async concurrency
+//    private final int PARALLELISM = 3; // if you do async concurrency
 
     //Get context
     public String getContext(ReactionService.ReactionCategory entityType, String entityId) {
         return switch (entityType) {
-            case POST -> postService.getById(entityId).get().getCaption();
-            case PUBLICATION -> publicationService.getPublicationById(entityId).get().getContent();
-            case EVENT -> eventService.getEventById(entityId).get().getDescription();
-            case QUOTE -> quoteService.getQuoteById(entityId).get().getText();
+            case POST -> postService.getById(entityId).orElseThrow().getCaption();
+            case PUBLICATION -> publicationService.getPublicationById(entityId).orElseThrow().getContent();
+            case EVENT -> eventService.getEventById(entityId).orElseThrow().getDescription();
+            case QUOTE -> quoteService.getQuoteById(entityId).orElseThrow().getText();
         };
     }
 
