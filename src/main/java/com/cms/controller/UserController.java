@@ -69,6 +69,11 @@ public class UserController {
             ApiResponse.success(userService.verifyUser(email, token))
         );
     } 
+    @PutMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Boolean>> resetPassword(@RequestParam String email) throws MessagingException, IOException {
+        Boolean success = userService.resetPassword(email);
+        return ResponseEntity.ok(ApiResponse.success(success));
+    }
 
     // Get user's full name
     @GetMapping("/{id}/fullname")

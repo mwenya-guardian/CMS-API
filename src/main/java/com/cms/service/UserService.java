@@ -21,19 +21,21 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
 
 @Service
 @AllArgsConstructor
 public class UserService {
 
-    private final UserRepository repository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
+    private final EmailService emailService;
 
 
     
     public List<User> getAll() {
-        return repository.findAll();
+        return userRepository.findAll();
     }
 
     
@@ -41,20 +43,20 @@ public class UserService {
         // controller used page default = 1; convert to 0-based page index here (caller may choose differently)
         int p = Math.max(0, page - 1);
 
-        Page<User> userPage = repository.findAll(PageRequest.of(p, size));
+        Page<User> userPage = userRepository.findAll(PageRequest.of(p, size));
         return new PageResponse<>(userPage.getContent().stream().map(this::mapUserToUserResponse).toList(), userPage.getNumber(), userPage.getSize(), userPage.getTotalPages());
     }
 
     
     public User getById(String id) {
-        return repository.findById(id).orElseThrow( ()->
+        return userRepository.findById(id).orElseThrow( ()->
                 new ResourceNotFoundException("User not found")
         );
     }
 
     
     public User getByEmail(String email) {
-        return repository.findByEmail(email).orElseThrow( ()->
+        return userRepository.findByEmail(email).orElseThrow( ()->
                 new ResourceNotFoundException("User not found")
         );
     }
@@ -66,7 +68,7 @@ public class UserService {
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new BadRequestException("Email is required");
         }
-        if (repository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateResourceException("Email already in use");
         }
 
@@ -80,7 +82,7 @@ public class UserService {
         u.setRole(request.getRole() == null ? User.UserRole.VIEWER : request.getRole());
 
         // createdAt and createdBy handled by BaseDocument / auditing annotations
-        return repository.save(u);
+        return userRepository.save(u);
     }
 
     @Transactional
@@ -89,7 +91,7 @@ public class UserService {
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new BadRequestException("Email is required");
         }
-        User userExisting = repository.findByEmail(request.getEmail().trim().toLowerCase()).orElse(null);
+        User userExisting = userRepository.findByEmail(request.getEmail().trim().toLowerCase()).orElse(null);
         if (userExisting  != null) {
             if(!userExisting.getActive()){
                 emailVerificationService.sendUserVerificationCode(userExisting.getEmail());
@@ -109,7 +111,7 @@ public class UserService {
         u.setRole(User.UserRole.USER);
         u.setActive(false); // User starts as inactive until email verification
 
-        User savedUser = repository.save(u);
+        User savedUser = userRepository.save(u);
         emailVerificationService.sendUserVerificationCode(u.getEmail());
         // createdAt and createdBy handled by BaseDocument / auditing annotations
         return savedUser;
@@ -118,12 +120,12 @@ public class UserService {
     
     @Transactional
     public User update(String id, UserUpdateRequest request) {
-        User existing = repository.findById(id)
+        User existing = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
 
         // If updating email ensure uniqueness
         if (request.getEmail() != null && !request.getEmail().equalsIgnoreCase(existing.getEmail())) {
-            if (repository.existsByEmail(request.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
                 throw new DuplicateResourceException("Email already in use");
             }
             existing.setEmail(request.getEmail().trim().toLowerCase());
@@ -139,41 +141,51 @@ public class UserService {
         //     existing.setPassword(passwordEncoder.encode(request.getPassword()));
         // }
 
-        return repository.save(existing);
+        return userRepository.save(existing);
     }
 
     
     @Transactional
     public void delete(String id) {
-        User u = repository.findById(id)
+        User u = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
-        repository.delete(u);
+        userRepository.delete(u);
     }
 
     
     public boolean existsByEmail(String email) {
-        return repository.existsByEmail(email);
+        return userRepository.existsByEmail(email);
     }
 
     
     @Transactional
-    public User changePassword(String id, String newPassword) {
+    public User changePassword(String email, String newPassword) {
         if (newPassword == null || newPassword.trim().length() < 6) {
             throw new BadRequestException("Password must be at least 6 characters");
         }
-        User u = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+        User u = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
         u.setPassword(passwordEncoder.encode(newPassword));
-        return repository.save(u);
+        return userRepository.save(u);
+    }
+    @Transactional
+    public Boolean resetPassword(String email) throws MessagingException, IOException {
+        User u = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
+        String newPassword = generateRandomPassword();
+        u.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(u);
+        emailService.sendPlain(email, "Reset Password", "Your new password is: " + newPassword);
+        return true;
     }
 
 
     
     @Transactional
     public void updateLastLogin(String id) {
-        repository.findById(id).ifPresent(u -> {
+        userRepository.findById(id).ifPresent(u -> {
             u.setLastLogin(LocalDateTime.now());
-            repository.save(u);
+            userRepository.save(u);
         });
     }
     private UserResponse mapUserToUserResponse(User user){
@@ -183,13 +195,13 @@ public class UserService {
     @Transactional
     public boolean verifyUser(String email, String code){
         String normalizedEmail = email.trim().toLowerCase();
-        User existing = repository.findByEmail(normalizedEmail).orElse(null);
+        User existing = userRepository.findByEmail(normalizedEmail).orElse(null);
         if(existing == null){
             throw new ResourceNotFoundException("Email is not registered as a user");
         }
         if(emailVerificationService.verifyUserCode(normalizedEmail, code)){
             existing.setActive(true);
-            repository.save(existing);
+            userRepository.save(existing);
             return true;
         }
         return false;
@@ -199,5 +211,24 @@ public class UserService {
     public String getFullName(String id) {
         User user = getById(id);
         return user.getFirstname() + " " + user.getLastname();
+    }
+
+    /**
+     * Generates a random password string of at least 6 characters
+     * containing uppercase letters, lowercase letters, and numbers
+     */
+    private String generateRandomPassword() {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        Random random = new Random();
+        StringBuilder password = new StringBuilder();
+        
+        // Generate a password between 7-12 characters for better security
+        int length = 7 + random.nextInt(6); // 7-12 characters
+        
+        for (int i = 0; i < length; i++) {
+            password.append(characters.charAt(random.nextInt(characters.length())));
+        }
+        
+        return password.toString();
     }
 }

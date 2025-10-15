@@ -193,6 +193,11 @@ src/main/java/com/cms/
 └── service/        # Business logic
 ```
 
+## Documentation
+
+- Requirements: see [docs/requirements.md](docs/requirements.md)
+- Swagger UI (when app is running): `http://localhost:3001/api/swagger-ui/index.html`
+
 ### Building for Production
 
 1. Update configuration for production environment

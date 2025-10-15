@@ -15,12 +15,17 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.TaskScheduler;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Date;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import jakarta.annotation.PostConstruct;
 
 @Service
 @AllArgsConstructor
@@ -29,7 +34,11 @@ public class BulletinService {
     // spring will inject these via constructor
     private final BulletinRepository bulletinRepository;
     private final MongoTemplate mongoTemplate;
+    private final TaskScheduler taskScheduler;
     private AuthService authService;
+
+    // Track scheduled publication jobs by bulletin id so we can cancel/reschedule
+    private final ConcurrentHashMap<String, ScheduledFuture<?>> scheduledPublications = new ConcurrentHashMap<>();
 
     /**
      * retrieve all bulletins optionally filtered by date, status, author or free-text search
@@ -82,7 +91,9 @@ public class BulletinService {
     public Bulletin createBulletin(BulletinRequest request) {
         Bulletin b = new Bulletin();
         applyRequestToBulletin(b, request);
-        return bulletinRepository.save(b);
+        Bulletin saved = bulletinRepository.save(b);
+        schedulePublicationIfNeeded(saved);
+        return saved;
     }
 
     /**
@@ -92,7 +103,10 @@ public class BulletinService {
         Bulletin b = bulletinRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("bulletin not found"));
         applyRequestToBulletin(b, request);
-        return bulletinRepository.save(b);
+        Bulletin saved = bulletinRepository.save(b);
+        // Reschedule/cancel depending on current status/time
+        schedulePublicationIfNeeded(saved);
+        return saved;
     }
 
     public Bulletin updateStatus(String id, PublicationStatus status){
@@ -102,7 +116,13 @@ public class BulletinService {
             maintainStatus();
         }
         b.setStatus(status);
-        return bulletinRepository.save(b);
+        Bulletin saved = bulletinRepository.save(b);
+        if (status == PublicationStatus.SCHEDULED) {
+            schedulePublicationIfNeeded(saved);
+        } else {
+            cancelScheduledPublication(saved.getId());
+        }
+        return saved;
     }
 
     /**
@@ -113,6 +133,7 @@ public class BulletinService {
             throw new RuntimeException("bulletin not found");
         }
         bulletinRepository.deleteById(id);
+        cancelScheduledPublication(id);
     }
 
     /**
@@ -195,6 +216,73 @@ public class BulletinService {
                 .peek((savedBulletin)-> savedBulletin.setStatus(PublicationStatus.DRAFT))
                 .toList();
         bulletinRepository.saveAll(updated);
+    }
+
+    /**
+     * Schedule auto-publication for the given bulletin if it is SCHEDULED and has a future publish time.
+     * If a job already exists for this bulletin, it will be cancelled and replaced.
+     */
+    private void schedulePublicationIfNeeded(Bulletin bulletin) {
+        try {
+            if (bulletin == null) return;
+            if (bulletin.getStatus() != PublicationStatus.SCHEDULED) {
+                cancelScheduledPublication(bulletin.getId());
+                return;
+            }
+
+            Date scheduledAtDate = bulletin.getScheduledPublishAt();
+            if (scheduledAtDate == null) {
+                cancelScheduledPublication(bulletin.getId());
+                return;
+            }
+
+            Instant scheduledAt = scheduledAtDate.toInstant();
+            if (scheduledAt.isBefore(Instant.now())) {
+                // If the scheduled time is in the past, publish immediately
+                updateStatus(bulletin.getId(), PublicationStatus.PUBLISHED);
+                return;
+            }
+
+            // Cancel existing if any
+            cancelScheduledPublication(bulletin.getId());
+
+            ScheduledFuture<?> future = taskScheduler.schedule(
+                    () -> {
+                        try {
+                            updateStatus(bulletin.getId(), PublicationStatus.PUBLISHED);
+                        } catch (Exception ignored) {
+                        } finally {
+                            // Remove reference after execution
+                            scheduledPublications.remove(bulletin.getId());
+                        }
+                    },
+                    scheduledAt
+            );
+            if (future != null) {
+                scheduledPublications.put(bulletin.getId(), future);
+            }
+        } catch (Exception ignored) {
+            // avoid breaking main flow due to scheduling errors
+        }
+    }
+
+    private void cancelScheduledPublication(String bulletinId) {
+        if (bulletinId == null) return;
+        ScheduledFuture<?> existing = scheduledPublications.remove(bulletinId);
+        if (existing != null) {
+            existing.cancel(false);
+        }
+    }
+
+    /**
+     * On startup, re-schedule all existing SCHEDULED bulletins.
+     */
+    @PostConstruct
+    private void rescheduleExistingScheduledBulletins() {
+        List<Bulletin> scheduled = bulletinRepository.findByStatus(PublicationStatus.SCHEDULED);
+        for (Bulletin bulletin : scheduled) {
+            schedulePublicationIfNeeded(bulletin);
+        }
     }
 
     /**

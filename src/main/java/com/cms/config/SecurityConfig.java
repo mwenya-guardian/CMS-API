@@ -97,6 +97,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/users/verify").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/verification/resend").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/users/reset-password").permitAll()
                         // Newsletter subscription
                         .requestMatchers(HttpMethod.POST, "/newsletter-subscribers/subscribe").permitAll()
                         .requestMatchers(HttpMethod.GET, "/newsletter-subscribers/verify").permitAll()
