@@ -39,6 +39,7 @@ public class UserController {
 
     // Get all users
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> getAllUsersPaginated(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit
@@ -47,6 +48,7 @@ public class UserController {
     }
 
     // Get user by ID
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<User>> getUserById(@PathVariable String id) {
         return ResponseEntity.ok(ApiResponse.success(userService.getById(id)));
@@ -62,7 +64,14 @@ public class UserController {
         User updatedUser = userService.update(id, request);
         return ResponseEntity.ok(ApiResponse.success(updatedUser));
     }
-
+    // Update user
+    @PutMapping("/me/update")
+    public ResponseEntity<ApiResponse<UserResponse>> updateSelf(
+            @Valid @RequestBody UserRequest request
+    ) {
+        UserResponse updatedUser = userService.updateSelf(request);
+        return ResponseEntity.ok(ApiResponse.success(updatedUser));
+    }
     @PutMapping("/verify")
     public ResponseEntity<ApiResponse<Boolean>> verifyUserCode(@RequestParam String token, @RequestParam String email){
         return ResponseEntity.ok(

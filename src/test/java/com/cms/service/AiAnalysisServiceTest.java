@@ -13,7 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.FindAndModifyOptions;
+// import org.springframework.data.mongodb.core.query.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -82,8 +82,8 @@ class AiAnalysisServiceTest {
         doNothing().when(trendService).recomputeAggregatesAndMaybeAlert(any(), anyString());
         doNothing().when(reactionService).updateAnalysedByTargetIdAndType(anyString(), any(ReactionBaseDocument.ReactionType.class), anyBoolean(), any());
         // Return a minimal job document from findAndModify so finalizeChunk continues safely
-        when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class), eq(com.cms.model.AnalysisJob.class)))
-                .thenAnswer(inv -> new com.cms.model.AnalysisJob());
+        // when(mongoTemplate.findAndModify(any(Query.class), any(Update.class), any(FindAndModifyOptions.class), eq(com.cms.model.AnalysisJob.class)))
+                // .thenAnswer(inv -> new com.cms.model.AnalysisJob());
 
         ArgumentCaptor<List<CommentAnalysis>> captor = ArgumentCaptor.forClass(List.class);
 

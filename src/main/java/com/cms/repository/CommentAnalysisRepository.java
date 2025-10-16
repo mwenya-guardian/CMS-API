@@ -20,6 +20,7 @@ public interface CommentAnalysisRepository extends MongoRepository<CommentAnalys
     long countBySentiment(String sentiment);
     Page<CommentAnalysis> findByModerationFlagged(boolean flagged, Pageable pageable);
     List<CommentAnalysis> findByAnalyzedAtBetween(Instant start, Instant end);
+    Page<CommentAnalysis> findByEntityTypeAndModerationFlagged(ReactionService.ReactionCategory entityType, Boolean isFlagged , Pageable pageable);
     
     @Query("{'moderationFlagged': ?0, $and: [" +
            "{'$or': [{'entityType': {$exists: false}}, {'entityType': ?1}]}, " +

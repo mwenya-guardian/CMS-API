@@ -10,10 +10,14 @@ import com.cms.exception.ResourceNotFoundException;
 import com.cms.model.User;
 import com.cms.repository.UserRepository;
 
+import com.cms.security.UserPrincipal;
 import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,12 +37,14 @@ public class UserService {
     private final EmailService emailService;
 
 
-    
+
+    @PreAuthorize("hasRole('ADMIN')")
     public List<User> getAll() {
         return userRepository.findAll();
     }
 
-    
+
+    @PreAuthorize("hasRole('ADMIN')")
     public PageResponse<UserResponse> getPaginated(int page, int size) {
         // controller used page default = 1; convert to 0-based page index here (caller may choose differently)
         int p = Math.max(0, page - 1);
@@ -54,7 +60,7 @@ public class UserService {
         );
     }
 
-    
+    @PreAuthorize("hasRole('ADMIN')")
     public User getByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow( ()->
                 new ResourceNotFoundException("User not found")
@@ -63,6 +69,7 @@ public class UserService {
 
     
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public User create(UserRequest request) {
         // basic validation (controller layer already validates jakarta constraints)
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
@@ -119,6 +126,7 @@ public class UserService {
     
     
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public User update(String id, UserUpdateRequest request) {
         User existing = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
@@ -142,6 +150,24 @@ public class UserService {
         // }
 
         return userRepository.save(existing);
+    }
+    public UserResponse updateSelf(UserRequest request) {
+        UserPrincipal userPrincipal = (UserPrincipal)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User existing = userRepository.findById(userPrincipal.getId()).orElseThrow();
+        if (request.getFirstname() != null) existing.setFirstname(request.getFirstname());
+        if (request.getLastname() != null) existing.setLastname(request.getLastname());
+        if (request.getDob() != null) existing.setDob(request.getDob());
+
+        //If password present, encode and update; otherwise keep existing
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+             existing.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        userRepository.save(existing);
+        return new UserResponse(existing.getId(), existing.getEmail(),
+                existing.getFirstname(), existing.getLastname(), existing.getDob(),
+                existing.getRole(), existing.getLastLogin()
+        );
     }
 
     

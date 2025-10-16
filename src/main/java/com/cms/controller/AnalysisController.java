@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @PreAuthorize("hasRole('ADMIN')")
 public class AnalysisController {
 
-    private final CommentAnalysisRepository analysisRepository;
+    private final CommentAnalysisRepository commentAnalysisRepository;
     private final AnalysisAlertRepository alertRepository;
     private final ReactionService reactionService;
 
@@ -60,15 +60,15 @@ public class AnalysisController {
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<AnalysisStats>> getAnalysisStats() {
         // Get total analyzed comments
-        long totalAnalyzed = analysisRepository.count();
+        long totalAnalyzed = commentAnalysisRepository.count();
         
         // Get flagged comments count
-        long flaggedComments = analysisRepository.countByModerationFlagged(true);
+        long flaggedComments = commentAnalysisRepository.countByModerationFlagged(true);
         
         // Get sentiment breakdown from comment analysis
-        long positiveCount = analysisRepository.countBySentiment("positive");
-        long neutralCount = analysisRepository.countBySentiment("neutral");
-        long negativeCount = analysisRepository.countBySentiment("negative");
+        long positiveCount = commentAnalysisRepository.countBySentiment("positive");
+        long neutralCount = commentAnalysisRepository.countBySentiment("neutral");
+        long negativeCount = commentAnalysisRepository.countBySentiment("negative");
         
         // Add reaction-based sentiment (likes = positive, dislikes = negative)
         long likesCount = reactionService.countReactionsByType("LIKE");
@@ -100,17 +100,18 @@ public class AnalysisController {
     public ResponseEntity<ApiResponse<PageResponse<CommentAnalysis>>> getFlaggedComments(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) ReactionService.ReactionCategory entityType,
-            @RequestParam(required = false) String sentiment,
-            @RequestParam(required = false) String search
+            @RequestParam(required = false) ReactionService.ReactionCategory entityType
+            // @RequestParam(required = false) String sentiment,
+            // @RequestParam(required = false) String search
     ) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("analyzedAt").descending());
         Page<CommentAnalysis> result;
         
-        if (entityType != null || sentiment != null) {
-            result = analysisRepository.findByModerationFlaggedAndFilters(true, entityType, sentiment, pageable);
+        if (entityType != null) {
+            // result = commentAnalysisRepository.findByModerationFlaggedAndFilters(true, entityType, sentiment, pageable);
+            result = commentAnalysisRepository.findByEntityTypeAndModerationFlagged(entityType, true, pageable);
         } else {
-            result = analysisRepository.findByModerationFlagged(true, pageable);
+            result = commentAnalysisRepository.findByModerationFlagged(true, pageable);
         }
         
         PageResponse<CommentAnalysis> response = new PageResponse<>(
@@ -131,7 +132,7 @@ public class AnalysisController {
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("analyzedAt").descending());
-        Page<CommentAnalysis> result = analysisRepository.findByEntityTypeAndEntityId(entityType, entityId, pageable);
+        Page<CommentAnalysis> result = commentAnalysisRepository.findByEntityTypeAndEntityId(entityType, entityId, pageable);
         
         PageResponse<CommentAnalysis> response = new PageResponse<>(
                 result.getContent(),
@@ -145,7 +146,7 @@ public class AnalysisController {
 
     @GetMapping("/comments/{id}")
     public ResponseEntity<ApiResponse<CommentAnalysis>> getAnalysisById(@PathVariable String id) {
-        CommentAnalysis analysis = analysisRepository.findById(id)
+        CommentAnalysis analysis = commentAnalysisRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Analysis not found"));
         return ResponseEntity.ok(ApiResponse.success(analysis));
     }
@@ -228,7 +229,7 @@ public class AnalysisController {
         Instant endDate = Instant.now();
         Instant startDate = endDate.minus(days, ChronoUnit.DAYS);
         
-        List<CommentAnalysis> analyses = analysisRepository.findByAnalyzedAtBetween(startDate, endDate);
+        List<CommentAnalysis> analyses = commentAnalysisRepository.findByAnalyzedAtBetween(startDate, endDate);
         
         // Group by date and calculate sentiment counts
         Map<String, Map<String, Integer>> dailyData = new LinkedHashMap<>();
@@ -276,7 +277,7 @@ public class AnalysisController {
         Instant endDate = Instant.now();
         Instant startDate = endDate.minus(days, ChronoUnit.DAYS);
         
-        List<CommentAnalysis> analyses = analysisRepository.findByEntityTypeAndEntityIdAndAnalyzedAtBetween(
+        List<CommentAnalysis> analyses = commentAnalysisRepository.findByEntityTypeAndEntityIdAndAnalyzedAtBetween(
                 entityType, entityId, startDate, endDate);
         
         // Similar grouping logic as above but filtered by entity
